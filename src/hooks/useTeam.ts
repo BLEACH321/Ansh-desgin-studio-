@@ -21,7 +21,13 @@ const DEFAULT_TEAM: TeamMember[] = [
 export const useTeam = () => {
   const [members, setMembers] = useState<TeamMember[]>(() => {
     const saved = localStorage.getItem('team_members');
-    const current = saved ? JSON.parse(saved) : DEFAULT_TEAM;
+    let current = saved ? JSON.parse(saved) : DEFAULT_TEAM;
+    
+    // Auto-sync: If user has empty data but we have defaults, use defaults
+    if (saved && Array.isArray(current) && current.length === 0 && DEFAULT_TEAM.length > 0) {
+      current = DEFAULT_TEAM;
+    }
+
     // Auto-migrate: filter out Instagram from all members
     return current.map((m: TeamMember) => ({
       ...m,

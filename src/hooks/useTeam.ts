@@ -14,7 +14,8 @@ const DEFAULT_TEAM: TeamMember[] = [
   { id: '3', name: 'Charuta Panchal', role: 'Sr. Interior Designer', image: '/charuta.jpg', socials: ['INSTAGRAM'] },
   { id: '4', name: 'Prashant Panchal', role: 'Visualizer', image: '/prashant.jpg', socials: [] },
   { id: '5', name: 'Amit Parmar', role: 'Technical Lead', image: '/amit.jpg', socials: [] },
-  { id: '6', name: 'Rajesh Parmar', role: 'Site Supervisor', image: '/rajesh.png', socials: [] }
+  { id: '6', name: 'Rajesh Parmar', role: 'Site Supervisor', image: '/rajesh.png', socials: [] },
+  { id: '7', name: 'Vipula Gaonkar', role: 'Sr. Interior Designer', image: '/vipula.png', socials: [] }
 ];
 
 

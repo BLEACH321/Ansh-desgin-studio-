@@ -1,0 +1,233 @@
+.services {
+  padding: 3% 4rem;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.services-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.services-container {
+  width: 100%;
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.services-container::-webkit-scrollbar {
+  display: none;
+}
+
+.services-grid {
+  display: flex;
+  gap: 1.95rem;
+  width: max-content;
+  padding: 2rem 0;
+}
+
+.service-card-wrapper {
+  perspective: 1000px;
+  flex: 0 0 350px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1200px) {
+  .services-container {
+    overflow-x: visible;
+  }
+  .services-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .service-card-wrapper {
+    flex: unset;
+  }
+}
+
+.service-card {
+  padding: 3rem 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.462rem;
+  transition: background 0.4s ease, border-color 0.4s ease;
+  cursor: pointer;
+  height: 100%;
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+[data-theme='light'] .service-card {
+  background: #f4f4f4;
+  border-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.service-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+}
+
+[data-theme='light'] .service-card:hover {
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.service-icon-box {
+  width: 60px;
+  height: 60px;
+  background: rgba(193, 154, 107, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s ease;
+}
+
+.service-card:hover .service-icon-box {
+  transform: rotateY(180deg);
+}
+
+.service-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.462rem;
+}
+
+.service-number {
+  font-size: 3.552rem;
+  font-family: var(--font-serif);
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent);
+  font-weight: 700;
+  line-height: 1;
+  display: block;
+  margin-bottom: 0;
+  opacity: 0.3;
+  transition: all 0.4s ease;
+}
+
+.service-card:hover .service-number {
+  opacity: 1;
+  -webkit-text-stroke-width: 1.5px;
+  transform: translate(5px, -5px);
+}
+
+.service-title {
+  font-size: 1.269rem;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  font-family: var(--font-serif);
+}
+
+.service-desc {
+  font-size: 0.913rem;
+  color: #ffffff;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+[data-theme='light'] .service-desc {
+  color: var(--primary);
+}
+
+.service-line {
+  width: 0%;
+  height: 1px;
+  background: var(--accent);
+  margin-top: auto;
+  transition: width 0.4s ease;
+}
+
+.service-card:hover .service-line {
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .services {
+    padding: 4rem 2rem;
+  }
+  
+  .services-header {
+    margin-bottom: 4rem;
+    text-align: center;
+  }
+
+  .services-grid {
+    padding: 1rem 0 3rem;
+  }
+
+  .service-card-wrapper {
+    flex: 0 0 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .services {
+    padding: 3rem 1.5rem;
+  }
+
+  .service-card-wrapper {
+    flex: 0 0 280px;
+  }
+
+  .service-card {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+/* Scroll Progress for Mobile */
+.services-progress-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.975rem;
+  margin-top: 3rem;
+}
+
+.services-progress-track {
+  width: 100px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='light'] .services-progress-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.services-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: 0%;
+}
+
+.scroll-hint {
+  font-size: 0.609rem;
+  letter-spacing: 0.2em;
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .services-progress-wrapper {
+    display: flex;
+  }
+}

@@ -1,0 +1,112 @@
+.footer {
+  padding: 5rem 4rem;
+  background: var(--bg);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--primary);
+  font-size: 0.812rem;
+  letter-spacing: 0.05em;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 1.462rem;
+}
+
+.footer-social-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.footer-social-icon:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(193, 154, 107, 0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(193, 154, 107, 0.1);
+}
+
+.footer-tooltip {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: var(--accent);
+  color: #fff;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.609rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.footer-social-icon:hover .footer-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.footer-brand span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.footer-admin {
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  color: var(--secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--secondary);
+  opacity: 0.6;
+  border-radius: 4px;
+}
+
+.footer-admin:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(193, 154, 107, 0.05);
+  opacity: 1;
+}
+
+[data-theme='light'] .footer-admin {
+  color: var(--primary);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    flex-direction: column;
+    gap: 2.438rem;
+    text-align: center;
+    padding: 4rem 1.5rem;
+  }
+  
+  .footer-socials {
+    order: 2;
+  }
+  
+  .footer-brand {
+    order: 1;
+  }
+  
+  .footer-admin {
+    order: 3;
+  }
+}

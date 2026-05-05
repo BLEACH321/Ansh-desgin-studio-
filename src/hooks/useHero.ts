@@ -20,19 +20,40 @@ export interface HeroSlide {
   link: string;
 }
 
+const DEFAULT_SLIDES = [
+  {
+    id: '1',
+    image: '/ansh11.jpeg',
+    title: 'URBAN ELEGANCE',
+    category: 'Interior Design',
+    description: 'Crafting sophisticated living spaces that blend modern aesthetics with ultimate comfort.',
+    link: '#interior'
+  },
+  {
+    id: '2',
+    image: '/ansh12.jpeg',
+    title: 'MURAL HOUSE',
+    category: 'Architecture',
+    description: 'A bold architectural statement where form meets function in perfect harmony.',
+    link: '#architecture'
+  }
+];
+
 export const useHero = () => {
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES as HeroSlide[]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const q = query(collection(db, 'hero'), orderBy('title', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const slidesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as HeroSlide[];
-      setSlides(slidesData);
+      if (!snapshot.empty) {
+        const slidesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as HeroSlide[];
+        setSlides(slidesData);
+      }
       setLoading(false);
     }, (error) => {
       console.error("Firestore error:", error);

@@ -5,12 +5,13 @@ import { getStorage } from 'firebase/storage';
 // Your web app's Firebase configuration
 // You can get these from your Firebase Console (Project Settings > General > Your Apps)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.firebasestorage.app",
-  messagingSenderId: "your-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyBSZB3wz4Ze2VDRWDuUim3dY0NsrhIh-rg",
+  authDomain: "ansh-desgin-studio.firebaseapp.com",
+  projectId: "ansh-desgin-studio",
+  storageBucket: "ansh-desgin-studio.firebasestorage.app",
+  messagingSenderId: "171298081894",
+  appId: "1:171298081894:web:01e0458e9621b2887cf1a7",
+  measurementId: "G-Y45R6GFM17"
 };
 
 // Initialize Firebase

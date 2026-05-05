@@ -169,8 +169,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       setIsAddingSlide(false);
       setEditingSlide(null);
       setNewSlide({});
-    } catch (e) {
-      showAlert("ERROR", "Failed to save hero slide.");
+    } catch (e: any) {
+      console.error("Hero Save Error:", e);
+      const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
+      showAlert("SAVE ERROR", `Failed to save slide.\n\nServer says: ${errorMsg}`);
     }
     
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
@@ -243,9 +245,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       });
       
       setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
-    } catch (error: any) {
-      showAlert('ERROR', 'Failed to save project to Firebase.');
-      console.error('Save error:', error);
+    } catch (e: any) {
+      console.error("Project Save Error:", e);
+      const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
+      showAlert('SAVE ERROR', `Failed to save project.\n\nServer says: ${errorMsg}`);
     }
   };
 
@@ -266,8 +269,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       setIsAddingMember(false);
       setEditingMember(null);
       setNewMember({ socials: ['INSTAGRAM'] });
-    } catch (e) {
-      showAlert('ERROR', 'Failed to save member to Firebase.');
+    } catch (e: any) {
+      console.error("Member Save Error:", e);
+      const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
+      showAlert('SAVE ERROR', `Failed to save member.\n\nServer says: ${errorMsg}`);
     }
     
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);

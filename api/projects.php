@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('memory_limit', '256M');
+ini_set('post_max_size', '64M');
 require_once 'config.php';
 
 header("Access-Control-Allow-Origin: *");

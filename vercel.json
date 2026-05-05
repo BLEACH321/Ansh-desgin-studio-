@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api-godaddy/:path*", "destination": "http://api.anshdesignstudio.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

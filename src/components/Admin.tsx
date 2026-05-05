@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Image as ImageIcon, Save, Trash2, Layout, ArrowLeft, Layers, MapPin, Calendar, Maximize, Ruler, RotateCcw, RefreshCw, Edit } from 'lucide-react';
-import { useProjects, type Project } from '../hooks/useProjects';
-import { useTeam, type TeamMember } from '../hooks/useTeam';
 import { useHero } from '../hooks/useHero';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import Footer from './Footer';
 import './Admin.css';
 
@@ -89,49 +86,56 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     setIsAdding(true);
   };
 
+  const uploadImage = async (file: File) => {
+    try {
+      const storageRef = ref(storage, `ads_studio/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      return url;
+    } catch (e) {
+      console.error("Firebase Storage Upload Error:", e);
+      showAlert("UPLOAD ERROR", "Failed to upload image to Firebase Storage.");
+      return null;
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery = false) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     if (isGallery) {
-      const promises = files.map(file => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-      });
-
-      const urls = await Promise.all(promises);
+      const urls = [];
+      for (const file of files) {
+        const url = await uploadImage(file);
+        if (url) urls.push(url);
+      }
       setNewProject(prev => ({ 
         ...prev, 
         gallery: [...(prev.gallery || []), ...urls] 
       }));
     } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
+      const url = await uploadImage(files[0]);
+      if (url) {
         setNewProject(prev => ({ 
           ...prev, 
-          image: event.target?.result as string 
+          image: url 
         }));
-      };
-      reader.readAsDataURL(files[0]);
+      }
     }
   };
+
   const handleReplaceGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const newUrl = event.target?.result as string;
+    const url = await uploadImage(file);
+    if (url) {
       setNewProject(prev => {
         const newGallery = [...(prev.gallery || [])];
-        newGallery[index] = newUrl;
+        newGallery[index] = url;
         return { ...prev, gallery: newGallery };
       });
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleSlidePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,22 +152,26 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveSlide = () => {
+  const handleSaveSlide = async () => {
     if (!newSlide.title || !newSlide.image) {
       showAlert('MISSING INFO', 'Title and Image are required.');
       return;
     }
 
-    if (editingSlide) {
-      updateSlide({ ...editingSlide, ...newSlide });
-      setToast({ show: true, message: `Updated ${newSlide.title}` });
-    } else {
-      addSlide(newSlide);
-      setToast({ show: true, message: `Added ${newSlide.title}` });
+    try {
+      if (editingSlide) {
+        await updateSlide(editingSlide.id, newSlide);
+        setToast({ show: true, message: `Updated ${newSlide.title}` });
+      } else {
+        await addSlide(newSlide);
+        setToast({ show: true, message: `Added ${newSlide.title}` });
+      }
+      setIsAddingSlide(false);
+      setEditingSlide(null);
+      setNewSlide({});
+    } catch (e) {
+      showAlert("ERROR", "Failed to save hero slide.");
     }
-    setIsAddingSlide(false);
-    setEditingSlide(null);
-    setNewSlide({});
     
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
   };
@@ -172,14 +180,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    const url = await uploadImage(file);
+    if (url) {
       setNewMember(prev => ({ 
         ...prev, 
-        image: event.target?.result as string 
+        image: url 
       }));
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleResetData = () => {
@@ -196,7 +203,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     );
   };
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!newProject.title || !newProject.image) {
       showAlert('MISSING INFORMATION', 'Please provide at least a Title and Cover Image.');
       return;
@@ -204,16 +211,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
     try {
       if (editingProject) {
-        const updatedData = { ...editingProject, ...newProject } as Project;
-        updateProject(updatedData);
+        await updateProject(editingProject.id, newProject as Project);
         setToast({
           show: true,
-          message: `Changes saved for "${updatedData.title}".`
+          message: `Changes saved for "${newProject.title}".`
         });
         setEditingProject(null);
       } else {
-        const project: Project = {
-          id: `proj-${Date.now()}`, // Consistent ID format
+        const projectData = {
           title: newProject.title || '',
           category: newProject.category || 'RESIDENTIAL',
           type: (newProject.type as any) || 'interior',
@@ -225,10 +230,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           area: newProject.area || '',
           size: newProject.size || 'item-medium',
         };
-        addProject(project);
+        await addProject(projectData);
         setToast({
           show: true,
-          message: `Project "${project.title}" published successfully!`
+          message: `Project "${projectData.title}" published successfully!`
         });
       }
 
@@ -240,38 +245,34 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         size: 'item-medium'
       });
       
-      // Auto-hide toast
       setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
     } catch (error: any) {
-      if (error.message === 'STORAGE_FULL') {
-        // Automatically optimize storage instead of showing error
-        localStorage.removeItem('ads_projects_trash');
-        showAlert('STORAGE OPTIMIZED', 'Storage has been automatically optimized to ensure unlimited capacity.');
-      } else {
-        showAlert('ERROR', 'Failed to save project. Please try again.');
-      }
+      showAlert('ERROR', 'Failed to save project to Firebase.');
       console.error('Save error:', error);
     }
   };
 
-  const handleSaveMember = () => {
+  const handleSaveMember = async () => {
     if (!newMember.name || !newMember.image) {
       showAlert('MISSING INFO', 'Name and Photo are required.');
       return;
     }
 
-    if (editingMember) {
-      updateMember(editingMember.id, newMember);
-      setToast({ show: true, message: `Updated ${newMember.name}` });
-    } else {
-      addMember(newMember as Omit<TeamMember, 'id'>);
-      setToast({ show: true, message: `Added ${newMember.name}` });
+    try {
+      if (editingMember) {
+        await updateMember(editingMember.id, newMember);
+        setToast({ show: true, message: `Updated ${newMember.name}` });
+      } else {
+        await addMember(newMember as Omit<TeamMember, 'id'>);
+        setToast({ show: true, message: `Added ${newMember.name}` });
+      }
+      setIsAddingMember(false);
+      setEditingMember(null);
+      setNewMember({ socials: ['INSTAGRAM'] });
+    } catch (e) {
+      showAlert('ERROR', 'Failed to save member to Firebase.');
     }
-    setIsAddingMember(false);
-    setEditingMember(null);
-    setNewMember({ socials: ['INSTAGRAM'] });
     
-    // Auto-hide toast
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
   };
 

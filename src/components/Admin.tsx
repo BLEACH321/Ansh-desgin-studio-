@@ -1,3 +1,8 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, X, Image as ImageIcon, Save, Trash2, Layout, ArrowLeft, Layers, MapPin, Calendar, Maximize, Ruler, RotateCcw, RefreshCw, Edit } from 'lucide-react';
+import { useProjects, type Project } from '../hooks/useProjects';
+import { useTeam, type TeamMember } from '../hooks/useTeam';
 import { useHero } from '../hooks/useHero';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';

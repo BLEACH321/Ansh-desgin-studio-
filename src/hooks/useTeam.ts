@@ -19,9 +19,14 @@ export const useTeam = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/team.php`);
-      setMembers(res.data);
+      if (res.data && Array.isArray(res.data)) {
+        setMembers(res.data);
+      } else {
+        setMembers([]);
+      }
     } catch (e) {
       console.error("Error loading team:", e);
+      setMembers([]);
     } finally {
       setLoading(false);
     }

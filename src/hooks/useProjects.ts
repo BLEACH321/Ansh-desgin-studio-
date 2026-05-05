@@ -25,9 +25,14 @@ export const useProjects = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/projects.php`);
-      setProjects(res.data.map((p: any) => ({ ...p, desc: p.description || '' })));
+      if (res.data && Array.isArray(res.data)) {
+        setProjects(res.data.map((p: any) => ({ ...p, desc: p.description || '' })));
+      } else {
+        setProjects([]);
+      }
     } catch (e) {
       console.error("Error loading projects:", e);
+      setProjects([]);
     } finally {
       setLoading(false);
     }

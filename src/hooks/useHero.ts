@@ -19,9 +19,14 @@ export const useHero = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/projects.php?type=hero`); 
-      setSlides(res.data);
+      if (res.data && Array.isArray(res.data)) {
+        setSlides(res.data);
+      } else {
+        setSlides([]);
+      }
     } catch (e) {
       console.error("Error loading slides:", e);
+      setSlides([]);
     } finally {
       setLoading(false);
     }

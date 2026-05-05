@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  onSnapshot 
-} from 'firebase/firestore';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 export interface HeroSlide {
   id: string;
@@ -20,77 +11,43 @@ export interface HeroSlide {
   link: string;
 }
 
-const DEFAULT_SLIDES = [
-  {
-    id: '1',
-    image: '/ansh11.jpeg',
-    title: 'URBAN ELEGANCE',
-    category: 'Interior Design',
-    description: 'Crafting sophisticated living spaces that blend modern aesthetics with ultimate comfort.',
-    link: '#interior'
-  },
-  {
-    id: '2',
-    image: '/ansh12.jpeg',
-    title: 'MURAL HOUSE',
-    category: 'Architecture',
-    description: 'A bold architectural statement where form meets function in perfect harmony.',
-    link: '#architecture'
-  }
-];
-
 export const useHero = () => {
-  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES as HeroSlide[]);
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const q = query(collection(db, 'hero'), orderBy('title', 'asc'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const slidesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as HeroSlide[];
-        setSlides(slidesData);
-      }
+  const loadSlides = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/projects.php?type=hero`); 
+      setSlides(res.data);
+    } catch (e) {
+      console.error("Error loading slides:", e);
+    } finally {
       setLoading(false);
-    }, (error) => {
-      console.error("Firestore error:", error);
-      setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    loadSlides();
   }, []);
 
   const addSlide = async (slide: Omit<HeroSlide, 'id'>) => {
-    try {
-      const docRef = await addDoc(collection(db, 'hero'), slide);
-      return docRef.id;
-    } catch (e) {
-      console.error("Error adding slide to Firebase:", e);
-      throw e;
-    }
+    await axios.post(`${API_BASE_URL}/projects.php?type=hero`, slide);
+    await loadSlides();
   };
 
   const updateSlide = async (id: string, updated: Partial<HeroSlide>) => {
-    try {
-      const slideRef = doc(db, 'hero', id);
-      await updateDoc(slideRef, updated);
-    } catch (e) {
-      console.error("Error updating slide in Firebase:", e);
-      throw e;
-    }
+    await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
+    await loadSlides();
   };
 
   const deleteSlide = async (id: string) => {
-    try {
-      const slideRef = doc(db, 'hero', id);
-      await deleteDoc(slideRef);
-    } catch (e) {
-      console.error("Error deleting slide from Firebase:", e);
-      throw e;
-    }
+    await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
+    await loadSlides();
+  };
+
+  const restoreDefaultSlides = () => {
+    // Logic to restore defaults
   };
 
   return { 
@@ -98,6 +55,7 @@ export const useHero = () => {
     loading,
     addSlide, 
     updateSlide, 
-    deleteSlide 
+    deleteSlide,
+    restoreDefaultSlides
   };
 };

@@ -4,8 +4,7 @@ import { Plus, X, Image as ImageIcon, Save, Trash2, Layout, ArrowLeft, Layers, M
 import { useProjects, type Project } from '../hooks/useProjects';
 import { useTeam, type TeamMember } from '../hooks/useTeam';
 import { useHero } from '../hooks/useHero';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
+import { API_BASE_URL } from '../config';
 import Footer from './Footer';
 import './Admin.css';
 
@@ -92,14 +91,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   };
 
   const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
     try {
-      const storageRef = ref(storage, `ads_studio/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      return url;
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data.url;
     } catch (e) {
-      console.error("Firebase Storage Upload Error:", e);
-      showAlert("UPLOAD ERROR", "Failed to upload image to Firebase Storage.");
+      console.error("PHP Upload Error:", e);
+      showAlert("UPLOAD ERROR", "Failed to upload image to GoDaddy server.");
       return null;
     }
   };
@@ -147,14 +148,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    const url = await uploadImage(file);
+    if (url) {
       setNewSlide((prev: any) => ({ 
         ...prev, 
-        image: event.target?.result as string 
+        image: url 
       }));
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleSaveSlide = async () => {
@@ -197,13 +197,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   const handleResetData = () => {
     showConfirm(
       'RESTORE SAMPLES', 
-      'This will reset your portfolio to the original sample projects. Any custom projects you added will be moved to the Trash. Proceed?',
+      'This will reset your portfolio and team to the original samples. Proceed?',
       () => {
-        // Move current projects to trash first
-        projects.forEach(p => deleteProject(p.id));
-        
-        localStorage.removeItem('ads_projects');
-        window.location.reload(); // Hard refresh to ensure everything syncs
+        localStorage.clear();
+        window.location.reload();
       }
     );
   };

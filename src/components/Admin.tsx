@@ -98,9 +98,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return res.data.url;
-    } catch (e) {
-      console.error("PHP Upload Error:", e);
-      showAlert("UPLOAD ERROR", "Failed to upload image to GoDaddy server.");
+    } catch (e: any) {
+      console.error("Upload Error Details:", e);
+      const errorMsg = e.response?.data?.error || e.message || "Unknown Error";
+      showAlert("UPLOAD ERROR", `Server says: ${errorMsg}\n\nTechnical details: ${e.code || 'None'}`);
       return null;
     }
   };

@@ -19,17 +19,15 @@ const ArchitectureGallery = ({ onProjectClick }: { onProjectClick: (project: any
         >
           STRUCTURAL MARVELS
         </motion.span>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="gallery-header"
-          >
-            <span className="section-tag">ARCHITECTURAL EXHIBITS</span>
-            <div className="title-row">
-              <h2>SELECTED WORKS</h2>
-            </div>
-          </motion.div>
+        <motion.h2 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: "-100px" }}
+          transition={{ delay: 0.2 }}
+          className="section-title"
+        >
+          Architectural <span>Design</span>
+        </motion.h2>
       </div>
 
       <motion.div layout className="arch-grid">

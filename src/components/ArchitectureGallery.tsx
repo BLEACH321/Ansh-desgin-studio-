@@ -11,15 +11,15 @@ const ArchitectureGallery = ({ onProjectClick }: { onProjectClick: (project: any
   return (
     <section id="architecture" className="arch-portfolio">
       <div className="arch-header">
-        <motion.span 
+        <motion.span
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           className="section-subtitle"
         >
-          STRUCTURAL MARVELS
+
         </motion.span>
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
@@ -33,14 +33,14 @@ const ArchitectureGallery = ({ onProjectClick }: { onProjectClick: (project: any
       <motion.div layout className="arch-grid">
         <AnimatePresence mode='popLayout'>
           {architectureProjects.map((item, idx) => (
-            <motion.div 
+            <motion.div
               layout
               key={item.id}
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: false, margin: "-50px" }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: (idx % 3) * 0.1,
                 ease: [0.16, 1, 0.3, 1]
               }}

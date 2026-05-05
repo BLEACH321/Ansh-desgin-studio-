@@ -92,43 +92,36 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   };
 
   const uploadImage = async (file: File) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    try {
-      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      return res.data.url;
-    } catch (e: any) {
-      console.error("Upload Error Details:", e);
-      const errorMsg = e.response?.data?.error || e.message || "Unknown Error";
-      showAlert("UPLOAD ERROR", `Server says: ${errorMsg}\n\nTechnical details: ${e.code || 'None'}`);
-      return null;
-    }
+    return new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isGallery = false) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (isGallery) {
-      const urls = [];
-      for (const file of files) {
-        const url = await uploadImage(file);
-        if (url) urls.push(url);
-      }
-      setNewProject(prev => ({ 
-        ...prev, 
-        gallery: [...(prev.gallery || []), ...urls] 
-      }));
-    } else {
-      const url = await uploadImage(files[0]);
-      if (url) {
+    try {
+      if (isGallery) {
+        const newUrls = await Promise.all(Array.from(files).map(file => uploadImage(file)));
+        const validUrls = newUrls.filter((url): url is string => url !== null);
         setNewProject(prev => ({ 
           ...prev, 
-          image: url 
+          gallery: [...(prev.gallery || []), ...validUrls] 
         }));
+      } else {
+        const url = await uploadImage(files[0]);
+        if (url) {
+          setNewProject(prev => ({ 
+            ...prev, 
+            image: url 
+          }));
+        }
       }
+    } catch (e) {
+      showAlert("IMAGE ERROR", "Failed to process image.");
     }
   };
 

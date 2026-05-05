@@ -25,6 +25,8 @@ export interface Project {
   size?: string;
 }
 
+import { initialProjects } from '../data/initialProjects';
+
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,14 +36,19 @@ export const useProjects = () => {
     const q = query(collection(db, 'projects'), orderBy('title', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Project[];
-      setProjects(projectsData);
+      if (snapshot.empty) {
+        setProjects(initialProjects as Project[]);
+      } else {
+        const projectsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Project[];
+        setProjects(projectsData);
+      }
       setLoading(false);
     }, (error) => {
       console.error("Firestore error:", error);
+      setProjects(initialProjects as Project[]);
       setLoading(false);
     });
 

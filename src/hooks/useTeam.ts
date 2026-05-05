@@ -20,6 +20,16 @@ export interface TeamMember {
   socials: string[];
 }
 
+const DEFAULT_TEAM = [
+  {
+    id: '1',
+    name: 'ANSH GUPTA',
+    role: 'Founder & Principal Architect',
+    image: '/team1.jpg',
+    socials: ['INSTAGRAM']
+  }
+];
+
 export const useTeam = () => {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,14 +39,19 @@ export const useTeam = () => {
     const q = query(collection(db, 'team'), orderBy('name', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const membersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as TeamMember[];
-      setMembers(membersData);
+      if (snapshot.empty) {
+        setMembers(DEFAULT_TEAM as TeamMember[]);
+      } else {
+        const membersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as TeamMember[];
+        setMembers(membersData);
+      }
       setLoading(false);
     }, (error) => {
       console.error("Firestore error:", error);
+      setMembers(DEFAULT_TEAM as TeamMember[]);
       setLoading(false);
     });
 

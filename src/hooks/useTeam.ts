@@ -8,7 +8,14 @@ export interface TeamMember {
   socials: string[];
 }
 
-const DEFAULT_TEAM: TeamMember[] = [];
+const DEFAULT_TEAM: TeamMember[] = [
+  { id: '1', name: 'Nayan Parmar', role: 'Principal Designer', image: '/01.png', socials: ['INSTAGRAM', 'LINKEDIN'] },
+  { id: '2', name: 'Ashwin Karelia', role: 'Sr. Associate Designer', image: '/ashwin.jpg', socials: ['LINKEDIN'] },
+  { id: '3', name: 'Charuta Panchal', role: 'Sr. Interior Designer', image: '/charuta.jpg', socials: ['INSTAGRAM'] },
+  { id: '4', name: 'Prashant Panchal', role: 'Visualizer', image: '/prashant.jpg', socials: [] },
+  { id: '5', name: 'Amit Parmar', role: 'Technical Lead', image: '/amit.jpg', socials: [] },
+  { id: '6', name: 'Rajesh Parmar', role: 'Site Supervisor', image: '/rajesh.png', socials: [] }
+];
 
 
 export const useTeam = () => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import { initialProjects } from '../data/initialProjects';
 
 export interface Project {
   id: string;

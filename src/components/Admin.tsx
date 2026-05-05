@@ -1,11 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Image as ImageIcon, Save, Trash2, Layout, ArrowLeft, Layers, MapPin, Calendar, Maximize, Ruler, RotateCcw, RefreshCw, Edit } from 'lucide-react';
-import { useProjects, type Project } from '../hooks/useProjects';
-import { useTeam, type TeamMember } from '../hooks/useTeam';
 import { useHero } from '../hooks/useHero';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import Footer from './Footer';
 import './Admin.css';
 
@@ -92,14 +87,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   };
 
   const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
     try {
-      const storageRef = ref(storage, `ads_studio/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      return url;
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data.url;
     } catch (e) {
-      console.error("Firebase Storage Upload Error:", e);
-      showAlert("UPLOAD ERROR", "Failed to upload image to Firebase Storage.");
+      console.error("PHP Upload Error:", e);
+      showAlert("UPLOAD ERROR", "Failed to upload image to GoDaddy server.");
       return null;
     }
   };

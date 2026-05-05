@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  onSnapshot 
-} from 'firebase/firestore';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 export interface Project {
   id: string;
@@ -25,62 +16,58 @@ export interface Project {
   size?: string;
 }
 
-import { initialProjects } from '../data/initialProjects';
-
 export const useProjects = () => {
-  const [projects, setProjects] = useState<Project[]>(initialProjects as Project[]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Real-time synchronization with Firestore
-    const q = query(collection(db, 'projects'), orderBy('title', 'asc'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        setProjects(initialProjects as Project[]);
-      } else {
-        const projectsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Project[];
-        setProjects(projectsData);
-      }
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/projects.php`);
+      // Map 'description' from PHP to 'desc' for frontend
+      const mapped = res.data.map((p: any) => ({
+        ...p,
+        desc: p.description
+      }));
+      setProjects(mapped);
+    } catch (e) {
+      console.error("Error loading projects from PHP API:", e);
+    } finally {
       setLoading(false);
-    }, (error) => {
-      console.error("Firestore error:", error);
-      setProjects(initialProjects as Project[]);
-      setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    loadProjects();
   }, []);
 
   const addProject = async (project: Omit<Project, 'id'>) => {
     try {
-      const docRef = await addDoc(collection(db, 'projects'), project);
-      return docRef.id;
+      const res = await axios.post(`${API_BASE_URL}/projects.php`, project);
+      setProjects(prev => [res.data, ...prev]);
+      return res.data;
     } catch (e) {
-      console.error("Error adding project to Firebase:", e);
+      console.error("Error adding project via PHP:", e);
       throw e;
     }
   };
 
   const updateProject = async (id: string, updated: Partial<Project>) => {
     try {
-      const projectRef = doc(db, 'projects', id);
-      await updateDoc(projectRef, updated);
+      await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
+      setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
     } catch (e) {
-      console.error("Error updating project in Firebase:", e);
+      console.error("Error updating project via PHP:", e);
       throw e;
     }
   };
 
   const deleteProject = async (id: string) => {
     try {
-      const projectRef = doc(db, 'projects', id);
-      await deleteDoc(projectRef);
+      await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
+      setProjects(prev => prev.filter(p => p.id !== id));
     } catch (e) {
-      console.error("Error deleting project from Firebase:", e);
+      console.error("Error deleting project via PHP:", e);
       throw e;
     }
   };
@@ -90,6 +77,7 @@ export const useProjects = () => {
     loading,
     addProject, 
     updateProject, 
-    deleteProject 
+    deleteProject,
+    refresh: loadProjects
   };
 };

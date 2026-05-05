@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy,
-  onSnapshot 
-} from 'firebase/firestore';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 export interface TeamMember {
   id: string;
@@ -20,70 +10,53 @@ export interface TeamMember {
   socials: string[];
 }
 
-const DEFAULT_TEAM = [
-  {
-    id: '1',
-    name: 'ANSH GUPTA',
-    role: 'Founder & Principal Architect',
-    image: '/team1.jpg',
-    socials: ['INSTAGRAM']
-  }
-];
-
 export const useTeam = () => {
-  const [members, setMembers] = useState<TeamMember[]>(DEFAULT_TEAM as TeamMember[]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Real-time synchronization with Firestore
-    const q = query(collection(db, 'team'), orderBy('name', 'asc'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        setMembers(DEFAULT_TEAM as TeamMember[]);
-      } else {
-        const membersData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as TeamMember[];
-        setMembers(membersData);
-      }
+  const loadMembers = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/team.php`);
+      setMembers(res.data);
+    } catch (e) {
+      console.error("Error loading team members from PHP API:", e);
+    } finally {
       setLoading(false);
-    }, (error) => {
-      console.error("Firestore error:", error);
-      setMembers(DEFAULT_TEAM as TeamMember[]);
-      setLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    loadMembers();
   }, []);
 
   const addMember = async (member: Omit<TeamMember, 'id'>) => {
     try {
-      const docRef = await addDoc(collection(db, 'team'), member);
-      return docRef.id;
+      const res = await axios.post(`${API_BASE_URL}/team.php`, member);
+      setMembers(prev => [res.data, ...prev]);
+      return res.data;
     } catch (e) {
-      console.error("Error adding member to Firebase:", e);
+      console.error("Error adding member via PHP:", e);
       throw e;
     }
   };
 
   const updateMember = async (id: string, updated: Partial<TeamMember>) => {
     try {
-      const memberRef = doc(db, 'team', id);
-      await updateDoc(memberRef, updated);
+      await axios.put(`${API_BASE_URL}/team.php?id=${id}`, updated);
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, ...updated } : m));
     } catch (e) {
-      console.error("Error updating member in Firebase:", e);
+      console.error("Error updating member via PHP:", e);
       throw e;
     }
   };
 
   const deleteMember = async (id: string) => {
     try {
-      const memberRef = doc(db, 'team', id);
-      await deleteDoc(memberRef);
+      await axios.delete(`${API_BASE_URL}/team.php?id=${id}`);
+      setMembers(prev => prev.filter(m => m.id !== id));
     } catch (e) {
-      console.error("Error deleting member from Firebase:", e);
+      console.error("Error deleting member via PHP:", e);
       throw e;
     }
   };
@@ -93,6 +66,7 @@ export const useTeam = () => {
     loading,
     addMember, 
     updateMember, 
-    deleteMember 
+    deleteMember,
+    refresh: loadMembers 
   };
 };

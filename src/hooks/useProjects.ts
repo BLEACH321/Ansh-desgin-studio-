@@ -28,7 +28,7 @@ export interface Project {
 import { initialProjects } from '../data/initialProjects';
 
 export const useProjects = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>(initialProjects as Project[]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

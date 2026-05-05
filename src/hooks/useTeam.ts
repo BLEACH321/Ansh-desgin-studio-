@@ -31,7 +31,7 @@ const DEFAULT_TEAM = [
 ];
 
 export const useTeam = () => {
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>(DEFAULT_TEAM as TeamMember[]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

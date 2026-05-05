@@ -40,16 +40,14 @@ const DEFAULT_SLIDES = [
 ];
 
 export const useHero = () => {
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES as HeroSlide[]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const q = query(collection(db, 'hero'), orderBy('title', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        setSlides(DEFAULT_SLIDES as HeroSlide[]);
-      } else {
+      if (!snapshot.empty) {
         const slidesData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -59,7 +57,6 @@ export const useHero = () => {
       setLoading(false);
     }, (error) => {
       console.error("Firestore error:", error);
-      setSlides(DEFAULT_SLIDES as HeroSlide[]);
       setLoading(false);
     });
 

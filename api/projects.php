@@ -3,28 +3,36 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 ini_set('memory_limit', '256M');
 ini_set('post_max_size', '64M');
+ini_set('memory_limit', '512M');
+ini_set('post_max_size', '128M');
+ini_set('upload_max_filesize', '128M');
 require_once 'config.php';
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-if ($method == 'OPTIONS') {
-    exit();
+function sendJSON($data, $code = 200) {
+    header('Content-Type: application/json');
+    http_response_code($code);
+    echo json_encode($data);
+    exit;
 }
+
+$method = $_SERVER['REQUEST_METHOD'];
+if ($method == 'OPTIONS') exit();
 
 switch($method) {
     case 'GET':
-        $sql = "SELECT * FROM projects ORDER BY id DESC";
+        $type = isset($_GET['type']) ? $conn->real_escape_string($_GET['type']) : null;
+        $sql = $type ? "SELECT * FROM projects WHERE type = '$type' ORDER BY id DESC" : "SELECT * FROM projects ORDER BY id DESC";
         $result = $conn->query($sql);
+        if (!$result) sendJSON(["error" => $conn->error], 500);
+        
         $projects = [];
-        if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
-                $row['gallery'] = json_decode($row['gallery']);
-                $projects[] = $row;
-            }
+        while($row = $result->fetch_assoc()) {
+            $row['gallery'] = json_decode($row['gallery'] ?? '[]');
+            $projects[] = $row;
         }
         sendJSON($projects);
         break;

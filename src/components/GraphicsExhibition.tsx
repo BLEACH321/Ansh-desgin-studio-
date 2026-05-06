@@ -49,7 +49,11 @@ const GraphicsExhibition = ({ onProjectClick }: { onProjectClick: (project: any)
               <span className="exhibition-number">{String(index + 1).padStart(2, '0')}</span>
               <span className="exhibition-category">{project.category}</span>
               <h3 className="exhibition-title">{project.title}</h3>
-              <p className="exhibition-desc">{project.desc}</p>
+              <p className="exhibition-desc">
+                {project.desc?.split(' ').length > 20 
+                  ? project.desc.split(' ').slice(0, 20).join(' ') + '...' 
+                  : project.desc}
+              </p>
               
 
 

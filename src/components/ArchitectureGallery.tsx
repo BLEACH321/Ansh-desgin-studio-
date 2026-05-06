@@ -53,7 +53,11 @@ const ArchitectureGallery = ({ onProjectClick }: { onProjectClick: (project: any
                   <div className="arch-overlay-content">
                     <span className="arch-project-category">{item.category}</span>
                     <h3 className="arch-project-title">{item.title}</h3>
-                    <p className="arch-project-desc">{item.desc}</p>
+                    <p className="arch-project-desc">
+                      {item.desc?.split(' ').length > 20 
+                        ? item.desc.split(' ').slice(0, 20).join(' ') + '...' 
+                        : item.desc}
+                    </p>
                     <div className="arch-project-line"></div>
                   </div>
                 </div>

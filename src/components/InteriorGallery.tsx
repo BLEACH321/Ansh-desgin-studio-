@@ -73,7 +73,11 @@ const InteriorGallery = ({ onProjectClick }: { onProjectClick: (project: any) =>
                   <div className="overlay-content">
                     <span className="project-category">{item.category}</span>
                     <h3 className="project-title">{item.title}</h3>
-                    <p className="project-desc">{item.desc}</p>
+                    <p className="project-desc">
+                      {item.desc?.split(' ').length > 20 
+                        ? item.desc.split(' ').slice(0, 20).join(' ') + '...' 
+                        : item.desc}
+                    </p>
                     <div className="project-line" />
                   </div>
                 </div>

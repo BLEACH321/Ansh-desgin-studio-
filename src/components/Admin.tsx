@@ -20,7 +20,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'team' | 'hero'>('portfolio');
-  
+
   // Team Management State
   const { members, deletedMembers, addMember, updateMember, deleteMember, restoreMember, permanentlyDeleteMember, restoreDefaultTeam } = useTeam();
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -34,7 +34,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   const [isAddingSlide, setIsAddingSlide] = useState(false);
   const [editingSlide, setEditingSlide] = useState<any>(null);
   const [newSlide, setNewSlide] = useState<any>({});
-  
+
   // Custom Modal State
   const [modalConfig, setModalConfig] = useState<{
     show: boolean,
@@ -100,9 +100,9 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          
-          // Max dimension 1024px for balanced quality and small payload size
-          const MAX_SIZE = 1024;
+
+          // Max dimension 800px for safe payload size on restricted servers
+          const MAX_SIZE = 800;
           if (width > height) {
             if (width > MAX_SIZE) {
               height *= MAX_SIZE / width;
@@ -114,14 +114,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
               height = MAX_SIZE;
             }
           }
-          
+
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to 50% quality JPEG for significantly smaller payloads
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
+
+          // Aggressive compression (40%) to ensure successful upload on shared hosting
+          resolve(canvas.toDataURL('image/jpeg', 0.4));
         };
         img.src = e.target?.result as string;
       };
@@ -137,16 +137,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       if (isGallery) {
         const newUrls = await Promise.all(Array.from(files).map(file => uploadImage(file)));
         const validUrls = newUrls.filter((url): url is string => url !== null);
-        setNewProject(prev => ({ 
-          ...prev, 
-          gallery: [...(prev.gallery || []), ...validUrls] 
+        setNewProject(prev => ({
+          ...prev,
+          gallery: [...(prev.gallery || []), ...validUrls]
         }));
       } else {
         const url = await uploadImage(files[0]);
         if (url) {
-          setNewProject(prev => ({ 
-            ...prev, 
-            image: url 
+          setNewProject(prev => ({
+            ...prev,
+            image: url
           }));
         }
       }
@@ -173,11 +173,12 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+
     const url = await uploadImage(file);
     if (url) {
-      setNewSlide((prev: any) => ({ 
-        ...prev, 
-        image: url 
+      setNewSlide((prev: any) => ({
+        ...prev,
+        image: url
       }));
     }
   };
@@ -212,7 +213,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
       showAlert("SAVE ERROR", `Failed to save slide.\n\nServer says: ${errorMsg}`);
     }
-    
+
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
   };
 
@@ -222,16 +223,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
     const url = await uploadImage(file);
     if (url) {
-      setNewMember(prev => ({ 
-        ...prev, 
-        image: url 
+      setNewMember(prev => ({
+        ...prev,
+        image: url
       }));
     }
   };
 
   const handleResetData = () => {
     showConfirm(
-      'RESTORE SAMPLES', 
+      'RESTORE SAMPLES',
       'This will reset your portfolio and team to the original samples. Proceed?',
       () => {
         localStorage.clear();
@@ -281,7 +282,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         gallery: [],
         size: 'item-medium'
       });
-      
+
       setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
     } catch (e: any) {
       console.error("Project Save Error:", e);
@@ -312,7 +313,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
       showAlert('SAVE ERROR', `Failed to save member.\n\nServer says: ${errorMsg}`);
     }
-    
+
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
   };
 
@@ -321,7 +322,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     if (!projectToDelete) return;
 
     showConfirm(
-      'DELETE PROJECT', 
+      'DELETE PROJECT',
       `Are you sure you want to delete "${projectToDelete.title}"? This can be undone for a few seconds.`,
       () => {
         deleteProject(id);
@@ -368,13 +369,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     setToast({ show: false, message: '' });
   };
 
-  const filteredProjects = filter === 'all' 
-    ? projects 
+  const filteredProjects = filter === 'all'
+    ? projects
     : projects.filter(p => p.type === filter);
 
   if (!isAuthenticated) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -382,7 +383,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       >
         <div className="login-bg-image" />
         <div className="login-overlay" />
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="login-card"
@@ -393,13 +394,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
             </div>
             <p>AUTHORIZED ACCESS ONLY</p>
           </div>
-          
+
           <form onSubmit={handleLogin} className="login-form">
             <div className={`password-input-group ${loginError ? 'error' : ''}`}>
               <label>STUDIO KEY</label>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
+              <input
+                type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 autoFocus
@@ -420,7 +421,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -434,17 +435,17 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 <img src="/logo.png" alt="Ansh Design Studio" className="admin-logo-img" />
               </div>
             </div>
-            
+
             <div className="dash-nav-right">
-              <button 
-                onClick={handleResetData} 
+              <button
+                onClick={handleResetData}
                 className="reset-data-btn"
                 title="Restore Sample Projects"
               >
                 <RefreshCw size={18} />
               </button>
-              <button 
-                onClick={() => setShowTrash(true)} 
+              <button
+                onClick={() => setShowTrash(true)}
                 className={`trash-toggle-btn ${(deletedProjects.length + deletedMembers.length) > 0 ? 'has-items' : ''}`}
                 title="Trash Bin"
               >
@@ -464,23 +465,23 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
               </button>
             </div>
           </div>
-          
+
           <div className="dash-nav-center">
             <div className="admin-main-tabs">
-              <button 
-                className={activeTab === 'portfolio' ? 'active' : ''} 
+              <button
+                className={activeTab === 'portfolio' ? 'active' : ''}
                 onClick={() => setActiveTab('portfolio')}
               >
                 PORTFOLIO
               </button>
-              <button 
-                className={activeTab === 'team' ? 'active' : ''} 
+              <button
+                className={activeTab === 'team' ? 'active' : ''}
                 onClick={() => setActiveTab('team')}
               >
                 OUR TEAM
               </button>
-              <button 
-                className={activeTab === 'hero' ? 'active' : ''} 
+              <button
+                className={activeTab === 'hero' ? 'active' : ''}
                 onClick={() => setActiveTab('hero')}
               >
                 HOME
@@ -507,7 +508,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 </button>
               </div>
             )}
-            
+
             {activeTab === 'team' && (
               <button onClick={() => setIsAddingMember(true)} className="add-member-top-btn">
                 <Plus size={14} /> ADD MEMBER
@@ -520,47 +521,47 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           <header className="content-header">
             <div className="header-text">
               <h1>
-                {activeTab === 'portfolio' ? 'Studio Portfolio' : 
-                 activeTab === 'team' ? 'Creative Team' : 'Home Images'}
+                {activeTab === 'portfolio' ? 'Studio Portfolio' :
+                  activeTab === 'team' ? 'Creative Team' : 'Home Images'}
               </h1>
               <p>
-                {activeTab === 'portfolio' ? 'Manage your luxury portfolio and project exhibits' : 
-                 activeTab === 'team' ? 'Update staff profiles and creative bios' : 'Manage your homepage visual slides'}
+                {activeTab === 'portfolio' ? 'Manage your luxury portfolio and project exhibits' :
+                  activeTab === 'team' ? 'Update staff profiles and creative bios' : 'Manage your homepage visual slides'}
               </p>
             </div>
-              <div className="header-stats">
-                <div className="stat-pill storage-pill">
-                  <span className="pill-label">STUDIO STORAGE</span>
-                  <span className="pill-val unlimited">UNLIMITED</span>
-                </div>
-                
-                {activeTab === 'portfolio' ? (
-                  <>
-                    <div className="stat-pill">
-                      <span className="pill-label">INTERIOR</span>
-                      <span className="pill-val">{projects.filter(p => p.type === 'interior').length}</span>
-                    </div>
-                    <div className="stat-pill">
-                      <span className="pill-label">GRAPHICS</span>
-                      <span className="pill-val">{projects.filter(p => p.type === 'graphics').length}</span>
-                    </div>
-                    <div className="stat-pill">
-                      <span className="pill-label">ARCHITECTURE</span>
-                      <span className="pill-val">{projects.filter(p => p.type === 'architecture').length}</span>
-                    </div>
-                  </>
-                ) : activeTab === 'team' ? (
-                  <div className="stat-pill">
-                    <span className="pill-label">TOTAL MEMBERS</span>
-                    <span className="pill-val">{members.length}</span>
-                  </div>
-                ) : (
-                  <div className="stat-pill">
-                    <span className="pill-label">HOME IMAGES</span>
-                    <span className="pill-val">{slides.length}</span>
-                  </div>
-                )}
+            <div className="header-stats">
+              <div className="stat-pill storage-pill">
+                <span className="pill-label">STUDIO STORAGE</span>
+                <span className="pill-val unlimited">UNLIMITED</span>
               </div>
+
+              {activeTab === 'portfolio' ? (
+                <>
+                  <div className="stat-pill">
+                    <span className="pill-label">INTERIOR</span>
+                    <span className="pill-val">{projects.filter(p => p.type === 'interior').length}</span>
+                  </div>
+                  <div className="stat-pill">
+                    <span className="pill-label">GRAPHICS</span>
+                    <span className="pill-val">{projects.filter(p => p.type === 'graphics').length}</span>
+                  </div>
+                  <div className="stat-pill">
+                    <span className="pill-label">ARCHITECTURE</span>
+                    <span className="pill-val">{projects.filter(p => p.type === 'architecture').length}</span>
+                  </div>
+                </>
+              ) : activeTab === 'team' ? (
+                <div className="stat-pill">
+                  <span className="pill-label">TOTAL MEMBERS</span>
+                  <span className="pill-val">{members.length}</span>
+                </div>
+              ) : (
+                <div className="stat-pill">
+                  <span className="pill-label">HOME IMAGES</span>
+                  <span className="pill-val">{slides.length}</span>
+                </div>
+              )}
+            </div>
           </header>
 
           <AnimatePresence mode="wait">
@@ -572,137 +573,137 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 exit={{ opacity: 0, y: -20 }}
                 className="advanced-project-grid"
               >
-              {filteredProjects.map((project, idx) => (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={project.id} 
-                  className="advanced-card"
-                >
-                  <div className="card-image-wrap">
-                    <img src={project.image} alt="" />
-                    <div className="card-badge">{project.type}</div>
-                    <div className="card-actions-hover">
-                      <div className="card-actions-inner">
-                        <button onClick={(e) => { e.stopPropagation(); handleEdit(project); }} className="action-btn edit" title="Edit Content">
-                          <Edit size={18} />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(project.id);
-                          }}
-                          className="action-btn delete"
-                          title="Move to Trash"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                {filteredProjects.map((project, idx) => (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: idx * 0.05 }}
+                    key={project.id}
+                    className="advanced-card"
+                  >
+                    <div className="card-image-wrap">
+                      <img src={project.image} alt="" />
+                      <div className="card-badge">{project.type}</div>
+                      <div className="card-actions-hover">
+                        <div className="card-actions-inner">
+                          <button onClick={(e) => { e.stopPropagation(); handleEdit(project); }} className="action-btn edit" title="Edit Content">
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(project.id);
+                            }}
+                            className="action-btn delete"
+                            title="Move to Trash"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="card-details">
-                    <span className="card-tag">{project.category}</span>
-                    <h3>{project.title}</h3>
-                    <div className="card-meta">
-                      <span>{project.location || 'N/A'}</span>
-                      <span className="dot">•</span>
-                      <span>{project.year || '2024'}</span>
+                    <div className="card-details">
+                      <span className="card-tag">{project.category}</span>
+                      <h3>{project.title}</h3>
+                      <div className="card-meta">
+                        <span>{project.location || 'N/A'}</span>
+                        <span className="dot">•</span>
+                        <span>{project.year || '2024'}</span>
+                      </div>
                     </div>
+                  </motion.div>
+                ))}
+
+                <motion.div
+                  whileHover={{ scale: 0.98 }}
+                  onClick={() => setIsAdding(true)}
+                  className="add-project-placeholder"
+                >
+                  <div className="placeholder-content">
+                    <div className="plus-icon"><Plus size={32} /></div>
+                    <h3>Add New Work</h3>
+                    <p>Click to expand your exhibit</p>
                   </div>
                 </motion.div>
-              ))}
-
-              <motion.div 
-                whileHover={{ scale: 0.98 }}
-                onClick={() => setIsAdding(true)}
-                className="add-project-placeholder"
-              >
-                <div className="placeholder-content">
-                  <div className="plus-icon"><Plus size={32} /></div>
-                  <h3>Add New Work</h3>
-                  <p>Click to expand your exhibit</p>
-                </div>
               </motion.div>
-            </motion.div>
             ) : activeTab === 'team' ? (
               <motion.div
                 key="team-grid"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="team-management-grid"
-            >
-              {members.map((member) => (
-                <div key={member.id} className="admin-team-card">
-                  <div className="admin-team-img">
-                    <img src={member.image} alt={member.name} />
-                    <div className="card-actions-overlay">
-                      <button onClick={() => {
-                        setEditingMember(member);
-                        setNewMember(member);
-                        setIsAddingMember(true);
-                      }} className="action-circle-btn edit">
-                        <Edit size={16} />
-                      </button>
-                      <button onClick={() => handleMemberDelete(member.id)} className="action-circle-btn delete">
-                        <Trash2 size={16} />
-                      </button>
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="team-management-grid"
+              >
+                {members.map((member) => (
+                  <div key={member.id} className="admin-team-card">
+                    <div className="admin-team-img">
+                      <img src={member.image} alt={member.name} />
+                      <div className="card-actions-overlay">
+                        <button onClick={() => {
+                          setEditingMember(member);
+                          setNewMember(member);
+                          setIsAddingMember(true);
+                        }} className="action-circle-btn edit">
+                          <Edit size={16} />
+                        </button>
+                        <button onClick={() => handleMemberDelete(member.id)} className="action-circle-btn delete">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="admin-team-info">
+                      <h3>{member.name}</h3>
+                      <p>{member.role}</p>
                     </div>
                   </div>
-                  <div className="admin-team-info">
-                    <h3>{member.name}</h3>
-                    <p>{member.role}</p>
-                  </div>
-                </div>
-              ))}
-              <button onClick={() => setIsAddingMember(true)} className="add-member-large-card">
-                <Plus size={32} />
-                <span>ADD NEW MEMBER</span>
-              </button>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="hero-management"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="hero-management-grid"
-            >
-              {slides.map((slide) => (
-                <div key={slide.id} className="admin-hero-card">
-                  <div className="admin-hero-img">
-                    <img src={slide.image} alt={slide.title} />
-                    <div className="card-actions-overlay">
-                      <button onClick={() => {
-                        setEditingSlide(slide);
-                        setNewSlide(slide);
-                        setIsAddingSlide(true);
-                      }} className="action-circle-btn edit">
-                        <Edit size={16} />
-                      </button>
-                       <button onClick={() => handleSlideDelete(slide.id)} className="action-circle-btn delete">
-                        <Trash2 size={16} />
-                      </button>
+                ))}
+                <button onClick={() => setIsAddingMember(true)} className="add-member-large-card">
+                  <Plus size={32} />
+                  <span>ADD NEW MEMBER</span>
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="hero-management"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="hero-management-grid"
+              >
+                {slides.map((slide) => (
+                  <div key={slide.id} className="admin-hero-card">
+                    <div className="admin-hero-img">
+                      <img src={slide.image} alt={slide.title} />
+                      <div className="card-actions-overlay">
+                        <button onClick={() => {
+                          setEditingSlide(slide);
+                          setNewSlide(slide);
+                          setIsAddingSlide(true);
+                        }} className="action-circle-btn edit">
+                          <Edit size={16} />
+                        </button>
+                        <button onClick={() => handleSlideDelete(slide.id)} className="action-circle-btn delete">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="admin-hero-info">
+                      <span className="slide-cat">SLIDE {slides.indexOf(slide) + 1}</span>
                     </div>
                   </div>
-                  <div className="admin-hero-info">
-                    <span className="slide-cat">SLIDE {slides.indexOf(slide) + 1}</span>
-                  </div>
-                </div>
-              ))}
-              <button onClick={() => setIsAddingSlide(true)} className="add-hero-card">
-                <Plus size={32} />
-                <span>ADD NEW IMAGE</span>
-              </button>
-              <button onClick={handleRestoreSlides} className="restore-hero-card">
-                <RotateCcw size={32} />
-                <span>RESTORE DEFAULTS</span>
-              </button>
-            </motion.div>
-          )}
+                ))}
+                <button onClick={() => setIsAddingSlide(true)} className="add-hero-card">
+                  <Plus size={32} />
+                  <span>ADD NEW IMAGE</span>
+                </button>
+                <button onClick={handleRestoreSlides} className="restore-hero-card">
+                  <RotateCcw size={32} />
+                  <span>RESTORE DEFAULTS</span>
+                </button>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
@@ -711,14 +712,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       <AnimatePresence>
         {modalConfig.show && (
           <div className="modal-wrapper centered">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="modal-overlay" 
-              onClick={() => setModalConfig({...modalConfig, show: false})} 
+              className="modal-overlay"
+              onClick={() => setModalConfig({ ...modalConfig, show: false })}
             />
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -732,14 +733,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
               <div className="modal-actions">
                 {modalConfig.type === 'confirm' ? (
                   <>
-                    <button className="modal-btn secondary" onClick={() => setModalConfig({...modalConfig, show: false})}>CANCEL</button>
+                    <button className="modal-btn secondary" onClick={() => setModalConfig({ ...modalConfig, show: false })}>CANCEL</button>
                     <button className="modal-btn danger" onClick={() => {
                       modalConfig.onConfirm?.();
-                      setModalConfig({...modalConfig, show: false});
+                      setModalConfig({ ...modalConfig, show: false });
                     }}>DELETE</button>
                   </>
                 ) : (
-                  <button className="modal-btn primary" onClick={() => setModalConfig({...modalConfig, show: false})}>UNDERSTOOD</button>
+                  <button className="modal-btn primary" onClick={() => setModalConfig({ ...modalConfig, show: false })}>UNDERSTOOD</button>
                 )}
               </div>
             </motion.div>
@@ -751,14 +752,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       <AnimatePresence>
         {isAdding && (
           <div className="modal-wrapper">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="modal-overlay" 
-              onClick={() => setIsAdding(false)} 
+              className="modal-overlay"
+              onClick={() => setIsAdding(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%', opacity: 0.5 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.5 }}
@@ -782,23 +783,23 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   <div className="form-section-advanced">
                     <label className="section-label">PROJECT TYPE</label>
                     <div className="luxury-type-selector">
-                      <button 
+                      <button
                         className={newProject.type === 'interior' ? 'active' : ''}
-                        onClick={() => setNewProject({...newProject, type: 'interior'})}
+                        onClick={() => setNewProject({ ...newProject, type: 'interior' })}
                       >
                         <Layers size={18} />
                         <span>INTERIOR DESIGN</span>
                       </button>
-                      <button 
+                      <button
                         className={newProject.type === 'graphics' ? 'active' : ''}
-                        onClick={() => setNewProject({...newProject, type: 'graphics'})}
+                        onClick={() => setNewProject({ ...newProject, type: 'graphics' })}
                       >
                         <ImageIcon size={18} />
                         <span>GRAPHICS & EXHIBITS</span>
                       </button>
-                      <button 
+                      <button
                         className={newProject.type === 'architecture' ? 'active' : ''}
-                        onClick={() => setNewProject({...newProject, type: 'architecture'})}
+                        onClick={() => setNewProject({ ...newProject, type: 'architecture' })}
                       >
                         <Layout size={18} />
                         <span>ARCHITECTURE</span>
@@ -808,29 +809,29 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
                   <div className="input-field full">
                     <label>PROJECT TITLE</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Name of the masterpiece"
                       value={newProject.title || ''}
-                      onChange={e => setNewProject({...newProject, title: e.target.value})}
+                      onChange={e => setNewProject({ ...newProject, title: e.target.value })}
                     />
                   </div>
 
                   <div className="input-field full">
                     <label>CATEGORY</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="RESIDENTIAL, COMMERCIAL, HOSPITALITY..."
                       value={newProject.category}
-                      onChange={e => setNewProject({...newProject, category: e.target.value.toUpperCase()})}
+                      onChange={e => setNewProject({ ...newProject, category: e.target.value.toUpperCase() })}
                     />
                     <div className="role-suggestions">
                       {['RESIDENTIAL', 'COMMERCIAL', 'HOSPITALITY', 'RETAIL', 'EXHIBIT'].map(cat => (
-                        <button 
+                        <button
                           key={cat}
                           type="button"
                           className={`suggestion-pill ${newProject.category === cat ? 'active' : ''}`}
-                          onClick={() => setNewProject({...newProject, category: cat})}
+                          onClick={() => setNewProject({ ...newProject, category: cat })}
                         >
                           {cat}
                         </button>
@@ -838,15 +839,15 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                     </div>
                   </div>
 
-                  { (newProject.type === 'interior' || newProject.type === 'architecture') && (
+                  {(newProject.type === 'interior' || newProject.type === 'architecture') && (
                     <div className="form-section-advanced">
                       <label className="section-label">EDITORIAL GRID SIZE</label>
                       <div className="grid-selector">
                         {['item-medium', 'item-wide', 'item-tall', 'item-large'].map(size => (
-                          <button 
+                          <button
                             key={size}
                             className={newProject.size === size ? 'active' : ''}
-                            onClick={() => setNewProject({...newProject, size})}
+                            onClick={() => setNewProject({ ...newProject, size })}
                           >
                             {size.replace('item-', '').toUpperCase()}
                           </button>
@@ -857,40 +858,40 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
                   <div className="input-field full">
                     <label>THE STORY (DESCRIPTION)</label>
-                    <textarea 
-                      rows={5} 
+                    <textarea
+                      rows={5}
                       placeholder="Describe the architectural vision..."
                       value={newProject.desc || ''}
-                      onChange={e => setNewProject({...newProject, desc: e.target.value})}
+                      onChange={e => setNewProject({ ...newProject, desc: e.target.value })}
                     />
                   </div>
 
                   <div className="form-grid-3">
                     <div className="input-field">
                       <label><MapPin size={12} /> LOCATION</label>
-                      <input 
-                        type="text" 
-                        placeholder="Mumbai, IN" 
+                      <input
+                        type="text"
+                        placeholder="Mumbai, IN"
                         value={newProject.location || ''}
-                        onChange={e => setNewProject({...newProject, location: e.target.value})} 
+                        onChange={e => setNewProject({ ...newProject, location: e.target.value })}
                       />
                     </div>
                     <div className="input-field">
                       <label><Calendar size={12} /> YEAR</label>
-                      <input 
-                        type="text" 
-                        placeholder="2024" 
+                      <input
+                        type="text"
+                        placeholder="2024"
                         value={newProject.year || ''}
-                        onChange={e => setNewProject({...newProject, year: e.target.value})} 
+                        onChange={e => setNewProject({ ...newProject, year: e.target.value })}
                       />
                     </div>
                     <div className="input-field">
                       <label><Maximize size={12} /> AREA</label>
-                      <input 
-                        type="text" 
-                        placeholder="5000 SQFT" 
+                      <input
+                        type="text"
+                        placeholder="5000 SQFT"
                         value={newProject.area || ''}
-                        onChange={e => setNewProject({...newProject, area: e.target.value})} 
+                        onChange={e => setNewProject({ ...newProject, area: e.target.value })}
                       />
                     </div>
                   </div>
@@ -909,8 +910,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                                   <RefreshCw size={14} />
                                   <input type="file" accept="image/*" hidden onChange={handleFileUpload} />
                                 </label>
-                                <button className="asset-action-btn delete" onClick={() => setNewProject({...newProject, image: ''})} title="Remove Image">
-                                  <X size={14}/>
+                                <button className="asset-action-btn delete" onClick={() => setNewProject({ ...newProject, image: '' })} title="Remove Image">
+                                  <X size={14} />
                                 </button>
                               </div>
                             </div>
@@ -935,8 +936,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                                   <RefreshCw size={10} />
                                   <input type="file" accept="image/*" hidden onChange={(e) => handleReplaceGalleryImage(e, i)} />
                                 </label>
-                                <button className="asset-action-btn-small delete" onClick={() => setNewProject({...newProject, gallery: newProject.gallery?.filter((_, idx) => idx !== i)})} title="Remove">
-                                  <X size={10}/>
+                                <button className="asset-action-btn-small delete" onClick={() => setNewProject({ ...newProject, gallery: newProject.gallery?.filter((_, idx) => idx !== i) })} title="Remove">
+                                  <X size={10} />
                                 </button>
                               </div>
                             </div>
@@ -967,19 +968,19 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           </div>
         )}
       </AnimatePresence>
-      
+
       {/* Trash Bin Modal */}
       <AnimatePresence>
         {showTrash && (
           <div className="modal-wrapper">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="modal-overlay" 
-              onClick={() => setShowTrash(false)} 
+              className="modal-overlay"
+              onClick={() => setShowTrash(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%', opacity: 0.5 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.5 }}
@@ -1012,14 +1013,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                           <span>PROJECT</span>
                         </div>
                         <div className="trash-actions">
-                          <button 
+                          <button
                             onClick={() => restoreProject(project.id)}
                             className="restore-btn"
                             title="Restore Project"
                           >
                             <RotateCcw size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => {
                               showConfirm(
                                 'PERMANENT DELETE',
@@ -1044,14 +1045,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                           <span>TEAM MEMBER</span>
                         </div>
                         <div className="trash-actions">
-                          <button 
+                          <button
                             onClick={() => restoreMember(member.id)}
                             className="restore-btn"
                             title="Restore Member"
                           >
                             <RotateCcw size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => {
                               showConfirm(
                                 'PERMANENT DELETE',
@@ -1078,14 +1079,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       <AnimatePresence>
         {isAddingMember && (
           <div className="modal-wrapper">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="modal-overlay" 
-              onClick={() => { setIsAddingMember(false); setEditingMember(null); }} 
+              className="modal-overlay"
+              onClick={() => { setIsAddingMember(false); setEditingMember(null); }}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%', opacity: 0.5 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.5 }}
@@ -1104,28 +1105,28 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 <div className="form-group-wrap">
                   <div className="input-field">
                     <label>MEMBER NAME</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g., Nayan Parmar"
                       value={newMember.name || ''}
-                      onChange={e => setNewMember({...newMember, name: e.target.value})}
+                      onChange={e => setNewMember({ ...newMember, name: e.target.value })}
                     />
                   </div>
                   <div className="input-field">
                     <label>ROLE</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g., Principal Designer"
                       value={newMember.role || ''}
-                      onChange={e => setNewMember({...newMember, role: e.target.value})}
+                      onChange={e => setNewMember({ ...newMember, role: e.target.value })}
                     />
                     <div className="role-suggestions">
                       {['Principal Designer', 'Architect', 'Senior Designer', 'Interior Designer', 'Project Manager', '3D Artist'].map(role => (
-                        <button 
+                        <button
                           key={role}
                           type="button"
                           className={`suggestion-pill ${newMember.role === role ? 'active' : ''}`}
-                          onClick={() => setNewMember({...newMember, role})}
+                          onClick={() => setNewMember({ ...newMember, role })}
                         >
                           {role}
                         </button>
@@ -1139,7 +1140,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                       {newMember.image ? (
                         <div className="upload-preview-container">
                           <img src={newMember.image} alt="Preview" className="upload-preview-main" />
-                          <button 
+                          <button
                             className="remove-img-btn"
                             onClick={() => setNewMember({ ...newMember, image: '' })}
                           >
@@ -1148,11 +1149,11 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                         </div>
                       ) : (
                         <label className="upload-trigger-large">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleMemberPhotoUpload} 
-                            hidden 
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleMemberPhotoUpload}
+                            hidden
                           />
                           <ImageIcon size={32} />
                           <span>UPLOAD PROFILE PHOTO</span>
@@ -1179,14 +1180,14 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       <AnimatePresence>
         {isAddingSlide && (
           <div className="modal-wrapper">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="modal-overlay" 
-              onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} 
+              className="modal-overlay"
+              onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%', opacity: 0.5 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.5 }}
@@ -1210,7 +1211,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                       {newSlide.image ? (
                         <div className="upload-preview-container">
                           <img src={newSlide.image} alt="Preview" className="upload-preview-main" />
-                          <button 
+                          <button
                             className="remove-img-btn"
                             onClick={() => setNewSlide({ ...newSlide, image: '' })}
                           >
@@ -1219,11 +1220,11 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                         </div>
                       ) : (
                         <label className="upload-trigger-large">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleSlidePhotoUpload} 
-                            hidden 
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSlidePhotoUpload}
+                            hidden
                           />
                           <ImageIcon size={32} />
                           <span>CHOOSE IMAGE</span>
@@ -1249,7 +1250,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       {/* Deletion Toast / Undo Notification */}
       <AnimatePresence>
         {toast.show && (
-          <motion.div 
+          <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
@@ -1266,7 +1267,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         )}
       </AnimatePresence>
 
-      <Footer onAdminClick={() => {}} />
+      <Footer onAdminClick={() => { }} />
     </motion.div>
   );
 };

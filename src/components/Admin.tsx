@@ -101,8 +101,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           let width = img.width;
           let height = img.height;
           
-          // Max dimension 1600px for high quality but small size
-          const MAX_SIZE = 1600;
+          // Max dimension 1024px for balanced quality and small payload size
+          const MAX_SIZE = 1024;
           if (width > height) {
             if (width > MAX_SIZE) {
               height *= MAX_SIZE / width;
@@ -120,8 +120,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Compress to 70% quality JPEG
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
+          // Compress to 50% quality JPEG for significantly smaller payloads
+          resolve(canvas.toDataURL('image/jpeg', 0.5));
         };
         img.src = e.target?.result as string;
       };

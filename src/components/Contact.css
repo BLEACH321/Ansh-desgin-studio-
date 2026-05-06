@@ -276,6 +276,7 @@
   backdrop-filter: blur(20px);
   position: relative;
   border-radius: 20px;
+  overflow: hidden;
 }
 
 [data-theme='light'] .contact-form-container {
@@ -300,16 +301,7 @@
   background: #fff;
 }
 
-.contact-form-container::after {
-  content: '';
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(225deg, var(--accent), transparent 70%);
-  opacity: 0.3;
-}
+
 
 .contact-form {
   display: flex;

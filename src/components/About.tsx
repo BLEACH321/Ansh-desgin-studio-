@@ -33,7 +33,7 @@ const About = () => {
           transition={{ duration: 0.8 }}
           className="about-image-box"
         >
-          <img src="/ansh3221.png" alt="Our Studio" />
+          <img src="/director_new.jpg" alt="Our Studio" />
         </motion.div>
 
         <div className="about-content">

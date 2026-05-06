@@ -183,18 +183,26 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   };
 
   const handleSaveSlide = async () => {
-    if (!newSlide.title || !newSlide.image) {
-      showAlert('MISSING INFO', 'Title and Image are required.');
+    if (!newSlide.image) {
+      showAlert('MISSING PHOTO', 'Please upload a photo for the homepage.');
       return;
     }
 
     try {
+      // Provide default values for unused fields
+      const slideData = {
+        title: 'Home Slide',
+        category: 'Interior',
+        description: '',
+        ...newSlide
+      };
+
       if (editingSlide) {
-        await updateSlide(editingSlide.id, newSlide);
-        setToast({ show: true, message: `Updated ${newSlide.title}` });
+        await updateSlide(editingSlide.id, slideData);
+        setToast({ show: true, message: `Updated Home Image` });
       } else {
-        await addSlide(newSlide);
-        setToast({ show: true, message: `Added ${newSlide.title}` });
+        await addSlide(slideData);
+        setToast({ show: true, message: `Added New Home Image` });
       }
       setIsAddingSlide(false);
       setEditingSlide(null);
@@ -337,16 +345,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
   const handleSlideDelete = (id: number) => {
     showConfirm(
-      "REMOVE HERO SLIDE?",
-      "This slide will be permanently removed from the homepage carousel.",
+      "REMOVE HOME IMAGE?",
+      "This image will be permanently removed from the homepage carousel.",
       () => deleteSlide(id)
     );
   };
 
   const handleRestoreSlides = () => {
     showConfirm(
-      "RESTORE DEFAULT SLIDES?",
-      "This will reset your hero carousel to the original studio showcase. Current slides will be replaced.",
+      "RESTORE DEFAULT IMAGES?",
+      "This will reset your home carousel to the original studio showcase. Current images will be replaced.",
       () => restoreDefaultSlides()
     );
   };
@@ -475,7 +483,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 className={activeTab === 'hero' ? 'active' : ''} 
                 onClick={() => setActiveTab('hero')}
               >
-                HOME HERO
+                HOME
               </button>
             </div>
 
@@ -513,11 +521,11 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
             <div className="header-text">
               <h1>
                 {activeTab === 'portfolio' ? 'Studio Portfolio' : 
-                 activeTab === 'team' ? 'Creative Team' : 'Hero Showcase'}
+                 activeTab === 'team' ? 'Creative Team' : 'Home Images'}
               </h1>
               <p>
                 {activeTab === 'portfolio' ? 'Manage your luxury portfolio and project exhibits' : 
-                 activeTab === 'team' ? 'Update staff profiles and creative bios' : 'Customize your homepage visual highlights'}
+                 activeTab === 'team' ? 'Update staff profiles and creative bios' : 'Manage your homepage visual slides'}
               </p>
             </div>
               <div className="header-stats">
@@ -548,7 +556,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   </div>
                 ) : (
                   <div className="stat-pill">
-                    <span className="pill-label">HERO SLIDES</span>
+                    <span className="pill-label">HOME IMAGES</span>
                     <span className="pill-val">{slides.length}</span>
                   </div>
                 )}
@@ -681,15 +689,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                     </div>
                   </div>
                   <div className="admin-hero-info">
-                    <span className="slide-cat">{slide.category}</span>
-                    <h3>{slide.title}</h3>
-                    <p>{slide.description}</p>
+                    <span className="slide-cat">SLIDE {slides.indexOf(slide) + 1}</span>
                   </div>
                 </div>
               ))}
               <button onClick={() => setIsAddingSlide(true)} className="add-hero-card">
                 <Plus size={32} />
-                <span>ADD NEW HERO SLIDE</span>
+                <span>ADD NEW IMAGE</span>
               </button>
               <button onClick={handleRestoreSlides} className="restore-hero-card">
                 <RotateCcw size={32} />
@@ -1189,44 +1195,17 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
             >
               <div className="modal-header-advanced">
                 <div className="header-title">
-                  <span className="subtitle">HERO MANAGER</span>
-                  <h2>{editingSlide ? 'EDIT SLIDE' : 'NEW HERO SLIDE'}</h2>
+                  <span className="subtitle">HOME MANAGER</span>
+                  <h2>{editingSlide ? 'EDIT IMAGE' : 'NEW HOME IMAGE'}</h2>
                 </div>
                 <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="close-btn-circle"><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
                 <div className="form-group-wrap">
-                  <div className="input-field">
-                    <label>SLIDE TITLE</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g., URBAN ELEGANCE"
-                      value={newSlide.title || ''}
-                      onChange={e => setNewSlide({...newSlide, title: e.target.value})}
-                    />
-                  </div>
-                  <div className="input-field">
-                    <label>CATEGORY / TAG</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g., Interior Design"
-                      value={newSlide.category || ''}
-                      onChange={e => setNewSlide({...newSlide, category: e.target.value})}
-                    />
-                  </div>
-                  <div className="input-field">
-                    <label>DESCRIPTION</label>
-                    <textarea 
-                      rows={3}
-                      placeholder="Briefly describe the slide..."
-                      value={newSlide.description || ''}
-                      onChange={e => setNewSlide({...newSlide, description: e.target.value})}
-                    />
-                  </div>
-
                   <div className="form-section-advanced">
-                    <label className="section-label">HERO IMAGE</label>
+                    <label className="section-label">UPLOAD IMAGE</label>
+                    <p className="upload-tip">Upload a high-resolution image for the homepage hero section.</p>
                     <div className="admin-image-upload">
                       {newSlide.image ? (
                         <div className="upload-preview-container">
@@ -1247,7 +1226,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                             hidden 
                           />
                           <ImageIcon size={32} />
-                          <span>UPLOAD HERO PHOTO</span>
+                          <span>CHOOSE IMAGE</span>
                         </label>
                       )}
                     </div>
@@ -1259,7 +1238,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                 <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="cancel-btn">CANCEL</button>
                 <button onClick={handleSaveSlide} className="save-btn-advanced">
                   <Save size={18} />
-                  <span>{editingSlide ? 'UPDATE SLIDE' : 'PUBLISH SLIDE'}</span>
+                  <span>{editingSlide ? 'UPDATE IMAGE' : 'PUBLISH IMAGE'}</span>
                 </button>
               </div>
             </motion.div>

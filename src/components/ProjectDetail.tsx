@@ -150,18 +150,24 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
             transition={{ delay: 1 }}
             className="detail-info-grid"
           >
-            <div className="info-item">
-              <span className="info-label">LOCATION</span>
-              <span className="info-value">{project.location || 'Ahmedabad, India'}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">YEAR</span>
-              <span className="info-value">{project.year || '2023'}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">AREA</span>
-              <span className="info-value">{project.area || '4,500 SQFT'}</span>
-            </div>
+            {project.location && (
+              <div className="info-item">
+                <span className="info-label">LOCATION</span>
+                <span className="info-value">{project.location}</span>
+              </div>
+            )}
+            {project.year && (
+              <div className="info-item">
+                <span className="info-label">YEAR</span>
+                <span className="info-value">{project.year}</span>
+              </div>
+            )}
+            {project.area && (
+              <div className="info-item">
+                <span className="info-label">AREA</span>
+                <span className="info-value">{project.area}</span>
+              </div>
+            )}
           </motion.div>
 
           <motion.p 
@@ -171,25 +177,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
             className="detail-desc"
           >
             {project.desc}
-            <br /><br />
-            A sophisticated project that redefines the boundaries of {project.category.toLowerCase()} through meticulous attention to detail and innovative use of space. Every element was carefully curated to create a harmonious and premium environment.
           </motion.p>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4 }}
-            className="detail-process"
-            style={{ marginTop: '4rem' }}
-          >
-            <div style={{ width: '40px', height: '1px', background: 'var(--accent)', marginBottom: '2rem' }} />
-            <h4 style={{ fontSize: '0.8rem', letterSpacing: '0.2em', color: 'var(--accent)', marginBottom: '1.5rem' }}>DESIGN PROCESS</h4>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.8' }}>
-              Every project begins with a deep dive into the client's aspirations. For {project.title}, we spent weeks analyzing the site's light patterns and social dynamics. 
-              <br /><br />
-              Phase 1 involved conceptual sketching and material research. Phase 2 focused on 3D visualization and lighting simulations to ensure the atmosphere met our high standards. Finally, Phase 3 saw the meticulous execution of custom furniture and structural details that make this space truly unique.
-            </p>
-          </motion.div>
         </div>
 
         <motion.div 

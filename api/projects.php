@@ -77,7 +77,7 @@ switch($method) {
 
         if (empty($updates)) sendJSON(["error" => "No updates"], 400);
 
-        $sql = "UPDATE projects SET " . implode(", ", $updates) . " WHERE id = $id";
+        $sql = "UPDATE projects SET " . implode(", ", $updates) . " WHERE id = '$id'";
         
         if ($conn->query($sql)) {
             sendJSON(["success" => true]);
@@ -88,7 +88,7 @@ switch($method) {
 
     case 'DELETE':
         $id = $_GET['id'];
-        $sql = "DELETE FROM projects WHERE id = $id";
+        $sql = "DELETE FROM projects WHERE id = '$id'";
         if ($conn->query($sql)) {
             sendJSON(["success" => true]);
         } else {

@@ -25,7 +25,7 @@ export const useProjects = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/projects.php`);
+      const res = await axios.get(`${API_BASE_URL}/projects.php?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
         setProjects(res.data.map((p: any) => ({ ...p, desc: p.description || '' })));
       } else {

@@ -18,7 +18,7 @@ export const useTeam = () => {
   const loadTeam = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/team.php`);
+      const res = await axios.get(`${API_BASE_URL}/team.php?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
         setMembers(res.data);
       } else {

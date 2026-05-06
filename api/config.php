@@ -20,8 +20,12 @@ $conn->set_charset("utf8mb4");
 // Helper function to handle JSON responses
 function sendJSON($data, $status = 200) {
     header('Content-Type: application/json');
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
     http_response_code($status);
     echo json_encode($data);
     exit();
 }
+
 ?>

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `team_members` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `role` varchar(255) NOT NULL,
-  `image` text NOT NULL,
+  `image` LONGTEXT NOT NULL,
   `socials` text DEFAULT NULL,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `category` varchar(255) NOT NULL,
-  `type` enum('interior', 'graphics', 'architecture') NOT NULL,
-  `image` text NOT NULL,
-  `gallery` text DEFAULT NULL,
+  `type` enum('interior', 'graphics', 'architecture', 'hero') NOT NULL,
+  `image` LONGTEXT NOT NULL,
+  `gallery` LONGTEXT DEFAULT NULL,
   `description` text DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
   `year` varchar(50) DEFAULT NULL,
@@ -26,3 +26,5 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+

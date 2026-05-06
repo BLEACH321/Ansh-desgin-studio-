@@ -54,14 +54,14 @@ switch($method) {
         if (isset($data['socials'])) $updates[] = "socials = '" . json_encode($data['socials']) . "'";
 
         if (empty($updates)) sendJSON(["error" => "No updates"], 400);
-        $sql = "UPDATE team_members SET " . implode(", ", $updates) . " WHERE id = $id";
+        $sql = "UPDATE team_members SET " . implode(", ", $updates) . " WHERE id = '$id'";
         if ($conn->query($sql)) sendJSON(["success" => true]);
         else sendJSON(["error" => $conn->error], 500);
         break;
 
     case 'DELETE':
         $id = $_GET['id'];
-        $sql = "DELETE FROM team_members WHERE id = $id";
+        $sql = "DELETE FROM team_members WHERE id = '$id'";
         if ($conn->query($sql)) sendJSON(["success" => true]);
         else sendJSON(["error" => $conn->error], 500);
         break;

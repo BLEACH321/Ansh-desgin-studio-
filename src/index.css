@@ -60,6 +60,13 @@ ul, ol {
   margin: 0;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+}
+
 button {
   cursor: pointer;
   border: none;

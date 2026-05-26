@@ -7,6 +7,7 @@ import { useTeam, type TeamMember } from '../hooks/useTeam';
 import { useHero } from '../hooks/useHero';
 import { API_BASE_URL } from '../config';
 import Footer from './Footer';
+import { ImageEnhancer } from './ImageEnhancer';
 import './Admin.css';
 
 const Admin = ({ onExit }: { onExit: () => void }) => {
@@ -20,6 +21,18 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'team' | 'hero'>('portfolio');
+
+  // Image Quality Enhancer State
+  const [enhancerSrc, setEnhancerSrc] = useState<string | null>(null);
+  const [onEnhancerSave, setOnEnhancerSave] = useState<((url: string) => void) | null>(null);
+
+  const readRawFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Team Management State
   const { members, deletedMembers, addMember, updateMember, deleteMember, restoreMember, permanentlyDeleteMember, restoreDefaultTeam } = useTeam();
@@ -135,22 +148,39 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
 
     try {
       if (isGallery) {
-        const newUrls = await Promise.all(Array.from(files).map(file => uploadImage(file)));
-        const validUrls = newUrls.filter((url): url is string => url !== null);
-        setNewProject(prev => ({
-          ...prev,
-          gallery: [...(prev.gallery || []), ...validUrls]
-        }));
+        const filesArray = Array.from(files);
+        let index = 0;
+        
+        const processNext = async () => {
+          if (index >= filesArray.length) return;
+          const rawUrl = await readRawFile(filesArray[index]);
+          setEnhancerSrc(rawUrl);
+          setOnEnhancerSave(() => (enhancedUrl: string) => {
+            setNewProject(prev => ({
+              ...prev,
+              gallery: [...(prev.gallery || []), enhancedUrl]
+            }));
+            index++;
+            if (index < filesArray.length) {
+              processNext();
+            } else {
+              setEnhancerSrc(null);
+            }
+          });
+        };
+        await processNext();
       } else {
-        const url = await uploadImage(files[0]);
-        if (url) {
+        const rawUrl = await readRawFile(files[0]);
+        setEnhancerSrc(rawUrl);
+        setOnEnhancerSave(() => (enhancedUrl: string) => {
           setNewProject(prev => ({
             ...prev,
-            image: url
+            image: enhancedUrl
           }));
-        }
+          setEnhancerSrc(null);
+        });
       }
-    } catch (e) {
+    } catch (err) {
       showAlert("IMAGE ERROR", "Failed to process image.");
     }
   };
@@ -159,13 +189,19 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = await uploadImage(file);
-    if (url) {
-      setNewProject(prev => {
-        const newGallery = [...(prev.gallery || [])];
-        newGallery[index] = url;
-        return { ...prev, gallery: newGallery };
+    try {
+      const rawUrl = await readRawFile(file);
+      setEnhancerSrc(rawUrl);
+      setOnEnhancerSave(() => (enhancedUrl: string) => {
+        setNewProject(prev => {
+          const newGallery = [...(prev.gallery || [])];
+          newGallery[index] = enhancedUrl;
+          return { ...prev, gallery: newGallery };
+        });
+        setEnhancerSrc(null);
       });
+    } catch (err) {
+      showAlert("IMAGE ERROR", "Failed to replace image.");
     }
   };
 
@@ -173,13 +209,18 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-
-    const url = await uploadImage(file);
-    if (url) {
-      setNewSlide((prev: any) => ({
-        ...prev,
-        image: url
-      }));
+    try {
+      const rawUrl = await readRawFile(file);
+      setEnhancerSrc(rawUrl);
+      setOnEnhancerSave(() => (enhancedUrl: string) => {
+        setNewSlide((prev: any) => ({
+          ...prev,
+          image: enhancedUrl
+        }));
+        setEnhancerSrc(null);
+      });
+    } catch (err) {
+      showAlert("IMAGE ERROR", "Failed to upload homepage slide.");
     }
   };
 
@@ -221,12 +262,18 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = await uploadImage(file);
-    if (url) {
-      setNewMember(prev => ({
-        ...prev,
-        image: url
-      }));
+    try {
+      const rawUrl = await readRawFile(file);
+      setEnhancerSrc(rawUrl);
+      setOnEnhancerSave(() => (enhancedUrl: string) => {
+        setNewMember(prev => ({
+          ...prev,
+          image: enhancedUrl
+        }));
+        setEnhancerSrc(null);
+      });
+    } catch (err) {
+      showAlert("IMAGE ERROR", "Failed to upload member photo.");
     }
   };
 
@@ -1266,6 +1313,18 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Smart HD Image Enhancer Modal */}
+      {enhancerSrc && onEnhancerSave && (
+        <ImageEnhancer
+          imageSrc={enhancerSrc}
+          onSave={onEnhancerSave}
+          onClose={() => {
+            setEnhancerSrc(null);
+            setOnEnhancerSave(null);
+          }}
+        />
+      )}
 
       <Footer onAdminClick={() => { }} />
     </motion.div>

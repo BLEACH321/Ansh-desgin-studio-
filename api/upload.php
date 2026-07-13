@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-$target_dir = "../uploads/";
+$target_dir = "uploads/";
 if (!file_exists($target_dir)) {
     mkdir($target_dir, 0777, true);
 }
@@ -22,9 +22,6 @@ if (isset($_FILES["image"])) {
         // On GoDaddy, you might want to return the full URL
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'];
-        if (strpos($host, 'api.') === 0) {
-            $host = substr($host, 4);
-        }
         $full_url = "$protocol://$host/uploads/$new_filename";
         
         echo json_encode(["url" => $full_url]);

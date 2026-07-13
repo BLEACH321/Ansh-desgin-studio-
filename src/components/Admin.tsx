@@ -35,15 +35,26 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     });
   };
 
+  const base64ToBlob = (base64Data: string): { blob: Blob, ext: string } => {
+    const parts = base64Data.split(',');
+    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const ext = mime.split('/')[1] || 'jpeg';
+    return { blob: new Blob([u8arr], { type: mime }), ext };
+  };
+
   const uploadBase64Image = async (base64Data: string): Promise<string> => {
     if (!base64Data || !base64Data.startsWith('data:image/')) {
       return base64Data;
     }
 
     try {
-      const response = await fetch(base64Data);
-      const blob = await response.blob();
-      const ext = base64Data.split(';')[0].split('/')[1] || 'jpeg';
+      const { blob, ext } = base64ToBlob(base64Data);
       const file = new File([blob], `image_${Date.now()}.${ext}`, { type: blob.type });
 
       const formData = new FormData();

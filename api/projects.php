@@ -38,7 +38,7 @@ switch($method) {
         $category = $conn->real_escape_string($data['category']);
         $type = $conn->real_escape_string($data['type']);
         $image = $conn->real_escape_string($data['image']);
-        $gallery = json_encode($data['gallery']);
+        $gallery = $conn->real_escape_string(json_encode($data['gallery']));
         $description = $conn->real_escape_string($data['desc'] ?? '');
         $location = $conn->real_escape_string($data['location'] ?? '');
         $year = $conn->real_escape_string($data['year'] ?? '');
@@ -69,7 +69,7 @@ switch($method) {
         }
         if (isset($data['type'])) $updates[] = "type = '" . $conn->real_escape_string($data['type']) . "'";
         if (isset($data['image'])) $updates[] = "image = '" . $conn->real_escape_string($data['image']) . "'";
-        if (isset($data['gallery'])) $updates[] = "gallery = '" . json_encode($data['gallery']) . "'";
+        if (isset($data['gallery'])) $updates[] = "gallery = '" . $conn->real_escape_string(json_encode($data['gallery'])) . "'";
         if (isset($data['location'])) $updates[] = "location = '" . $conn->real_escape_string($data['location']) . "'";
         if (isset($data['year'])) $updates[] = "year = '" . $conn->real_escape_string($data['year']) . "'";
         if (isset($data['area'])) $updates[] = "area = '" . $conn->real_escape_string($data['area']) . "'";

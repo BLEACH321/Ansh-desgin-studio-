@@ -332,10 +332,13 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       // 1. Upload Cover Image if it's base64
       const coverUrl = await uploadBase64Image(newProject.image);
       
-      // 2. Upload Gallery Images if they are base64
-      const galleryUrls = await Promise.all(
-        (newProject.gallery || []).map(img => uploadBase64Image(img))
-      );
+      // 2. Upload Gallery Images sequentially to avoid hitting server process/connection limits
+      const galleryUrls: string[] = [];
+      const rawGallery = (newProject.gallery || []).filter(img => typeof img === 'string' && img.trim() !== '');
+      for (const img of rawGallery) {
+        const url = await uploadBase64Image(img);
+        galleryUrls.push(url);
+      }
 
       const projectData = {
         title: newProject.title || '',

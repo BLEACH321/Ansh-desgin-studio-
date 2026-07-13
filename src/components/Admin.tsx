@@ -25,6 +25,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
   // Image Quality Enhancer State
   const [enhancerSrc, setEnhancerSrc] = useState<string | null>(null);
   const [onEnhancerSave, setOnEnhancerSave] = useState<((url: string) => void) | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const readRawFile = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -32,6 +33,37 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       reader.onload = (e) => resolve(e.target?.result as string);
       reader.readAsDataURL(file);
     });
+  };
+
+  const uploadBase64Image = async (base64Data: string): Promise<string> => {
+    if (!base64Data || !base64Data.startsWith('data:image/')) {
+      return base64Data;
+    }
+
+    try {
+      const response = await fetch(base64Data);
+      const blob = await response.blob();
+      const ext = base64Data.split(';')[0].split('/')[1] || 'jpeg';
+      const file = new File([blob], `image_${Date.now()}.${ext}`, { type: blob.type });
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (res.data && res.data.url) {
+        return res.data.url;
+      } else {
+        throw new Error(res.data.error || 'Failed to upload image to server');
+      }
+    } catch (err: any) {
+      console.error("Error uploading image:", err);
+      throw new Error(err.message || "Failed to upload image to server");
+    }
   };
 
   // Team Management State
@@ -230,13 +262,16 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    setIsSaving(true);
     try {
+      const imageUrl = await uploadBase64Image(newSlide.image);
       // Provide default values for unused fields
       const slideData = {
         title: 'Home Slide',
         category: 'Interior',
         description: '',
-        ...newSlide
+        ...newSlide,
+        image: imageUrl
       };
 
       if (editingSlide) {
@@ -253,6 +288,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       console.error("Hero Save Error:", e);
       const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
       showAlert("SAVE ERROR", `Failed to save slide.\n\nServer says: ${errorMsg}`);
+    } finally {
+      setIsSaving(false);
     }
 
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
@@ -294,27 +331,37 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    setIsSaving(true);
     try {
+      // 1. Upload Cover Image if it's base64
+      const coverUrl = await uploadBase64Image(newProject.image);
+      
+      // 2. Upload Gallery Images if they are base64
+      const galleryUrls = await Promise.all(
+        (newProject.gallery || []).map(img => uploadBase64Image(img))
+      );
+
+      const projectData = {
+        title: newProject.title || '',
+        category: newProject.category || 'RESIDENTIAL',
+        type: (newProject.type as any) || 'interior',
+        image: coverUrl,
+        gallery: galleryUrls,
+        desc: newProject.desc || '',
+        location: newProject.location || '',
+        year: newProject.year || '2024',
+        area: newProject.area || '',
+        size: newProject.size || 'item-medium',
+      };
+
       if (editingProject) {
-        await updateProject(editingProject.id, newProject as Project);
+        await updateProject(editingProject.id, projectData as Project);
         setToast({
           show: true,
-          message: `Changes saved for "${newProject.title}".`
+          message: `Changes saved for "${projectData.title}".`
         });
         setEditingProject(null);
       } else {
-        const projectData = {
-          title: newProject.title || '',
-          category: newProject.category || 'RESIDENTIAL',
-          type: (newProject.type as any) || 'interior',
-          image: newProject.image || '',
-          gallery: newProject.gallery || [],
-          desc: newProject.desc || '',
-          location: newProject.location || '',
-          year: newProject.year || '2024',
-          area: newProject.area || '',
-          size: newProject.size || 'item-medium',
-        };
         await addProject(projectData);
         setToast({
           show: true,
@@ -335,6 +382,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       console.error("Project Save Error:", e);
       const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
       showAlert('SAVE ERROR', `Failed to save project.\n\nServer says: ${errorMsg}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -344,12 +393,19 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    setIsSaving(true);
     try {
+      const imageUrl = await uploadBase64Image(newMember.image);
+      const memberData = {
+        ...newMember,
+        image: imageUrl
+      };
+
       if (editingMember) {
-        await updateMember(editingMember.id, newMember);
+        await updateMember(editingMember.id, memberData);
         setToast({ show: true, message: `Updated ${newMember.name}` });
       } else {
-        await addMember(newMember as Omit<TeamMember, 'id'>);
+        await addMember(memberData as Omit<TeamMember, 'id'>);
         setToast({ show: true, message: `Added ${newMember.name}` });
       }
       setIsAddingMember(false);
@@ -359,6 +415,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       console.error("Member Save Error:", e);
       const errorMsg = e.response?.data?.error || e.message || "Check your Database/SSL";
       showAlert('SAVE ERROR', `Failed to save member.\n\nServer says: ${errorMsg}`);
+    } finally {
+      setIsSaving(false);
     }
 
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
@@ -1005,10 +1063,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   setIsAdding(false);
                   setEditingProject(null);
                   setNewProject({ type: 'interior', category: 'RESIDENTIAL', gallery: [], size: 'item-medium' });
-                }} className="footer-cancel">CANCEL</button>
-                <button onClick={handleAddProject} className="footer-save">
-                  <span>{editingProject ? 'SAVE CHANGES' : 'PUBLISH PROJECT'}</span>
-                  <Save size={18} />
+                }} className="footer-cancel" disabled={isSaving}>CANCEL</button>
+                <button onClick={handleAddProject} className="footer-save" disabled={isSaving}>
+                  <span>{isSaving ? 'SAVING...' : (editingProject ? 'SAVE CHANGES' : 'PUBLISH PROJECT')}</span>
+                  {isSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
                 </button>
               </div>
             </motion.div>
@@ -1212,10 +1270,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
               </div>
 
               <div className="modal-footer-advanced">
-                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="cancel-btn">CANCEL</button>
-                <button onClick={handleSaveMember} className="save-btn-advanced">
-                  <Save size={18} />
-                  <span>{editingMember ? 'UPDATE CREATIVE' : 'PUBLISH MEMBER'}</span>
+                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="cancel-btn" disabled={isSaving}>CANCEL</button>
+                <button onClick={handleSaveMember} className="save-btn-advanced" disabled={isSaving}>
+                  {isSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                  <span>{isSaving ? 'SAVING...' : (editingMember ? 'UPDATE CREATIVE' : 'PUBLISH MEMBER')}</span>
                 </button>
               </div>
             </motion.div>
@@ -1283,10 +1341,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
               </div>
 
               <div className="modal-footer-advanced">
-                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="cancel-btn">CANCEL</button>
-                <button onClick={handleSaveSlide} className="save-btn-advanced">
-                  <Save size={18} />
-                  <span>{editingSlide ? 'UPDATE IMAGE' : 'PUBLISH IMAGE'}</span>
+                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="cancel-btn" disabled={isSaving}>CANCEL</button>
+                <button onClick={handleSaveSlide} className="save-btn-advanced" disabled={isSaving}>
+                  {isSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                  <span>{isSaving ? 'SAVING...' : (editingSlide ? 'UPDATE IMAGE' : 'PUBLISH IMAGE')}</span>
                 </button>
               </div>
             </motion.div>

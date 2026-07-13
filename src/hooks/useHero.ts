@@ -22,8 +22,9 @@ export const useHero = () => {
       if (res.data && Array.isArray(res.data)) {
         const cleanUrl = (url: string) => {
           if (!url) return url;
-          if (url.includes('anshdesignstudio.com/uploads/') && !url.includes('api.anshdesignstudio.com')) {
-            return url.replace('anshdesignstudio.com/uploads/', 'api.anshdesignstudio.com/uploads/');
+          const uploadsIdx = url.indexOf('/uploads/');
+          if (uploadsIdx !== -1) {
+            return `${API_BASE_URL}${url.substring(uploadsIdx)}`;
           }
           return url;
         };

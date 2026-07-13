@@ -35,26 +35,15 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     });
   };
 
-  const base64ToBlob = (base64Data: string): { blob: Blob, ext: string } => {
-    const parts = base64Data.split(',');
-    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-    const bstr = atob(parts[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    const ext = mime.split('/')[1] || 'jpeg';
-    return { blob: new Blob([u8arr], { type: mime }), ext };
-  };
-
   const uploadBase64Image = async (base64Data: string): Promise<string> => {
     if (!base64Data || !base64Data.startsWith('data:image/')) {
       return base64Data;
     }
 
     try {
-      const { blob, ext } = base64ToBlob(base64Data);
+      const response = await fetch(base64Data);
+      const blob = await response.blob();
+      const ext = base64Data.split(';')[0].split('/')[1] || 'jpeg';
       const file = new File([blob], `image_${Date.now()}.${ext}`, { type: blob.type });
 
       const formData = new FormData();
@@ -269,6 +258,9 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    const isEditMode = !!editingSlide;
+    const slideId = editingSlide?.id;
+
     setIsSaving(true);
     try {
       const imageUrl = await uploadBase64Image(newSlide.image);
@@ -281,8 +273,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         image: imageUrl
       };
 
-      if (editingSlide) {
-        await updateSlide(editingSlide.id, slideData);
+      if (isEditMode && slideId) {
+        await updateSlide(slideId, slideData);
         setToast({ show: true, message: `Updated Home Image` });
       } else {
         await addSlide(slideData);
@@ -338,6 +330,9 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    const isEditMode = !!editingProject;
+    const projectId = editingProject?.id;
+
     setIsSaving(true);
     try {
       // 1. Upload Cover Image if it's base64
@@ -364,8 +359,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         size: newProject.size || 'item-medium',
       };
 
-      if (editingProject) {
-        await updateProject(editingProject.id, projectData as Project);
+      if (isEditMode && projectId) {
+        await updateProject(projectId, projectData as Project);
         setToast({
           show: true,
           message: `Changes saved for "${projectData.title}".`
@@ -403,6 +398,9 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
+    const isEditMode = !!editingMember;
+    const memberId = editingMember?.id;
+
     setIsSaving(true);
     try {
       const imageUrl = await uploadBase64Image(newMember.image);
@@ -411,8 +409,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         image: imageUrl
       };
 
-      if (editingMember) {
-        await updateMember(editingMember.id, memberData);
+      if (isEditMode && memberId) {
+        await updateMember(memberId, memberData);
         setToast({ show: true, message: `Updated ${newMember.name}` });
       } else {
         await addMember(memberData as Omit<TeamMember, 'id'>);
@@ -890,7 +888,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   setIsAdding(false);
                   setEditingProject(null);
                   setNewProject({ type: 'interior', category: 'RESIDENTIAL', gallery: [], size: 'item-medium' });
-                }} className="close-btn-circle"><X /></button>
+                }} className="close-btn-circle" disabled={isSaving}><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
@@ -1213,7 +1211,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   <span className="subtitle">TEAM MANAGER</span>
                   <h2>{editingMember ? 'EDIT MEMBER' : 'NEW CREATIVE'}</h2>
                 </div>
-                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="close-btn-circle"><X /></button>
+                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="close-btn-circle" disabled={isSaving}><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
@@ -1314,7 +1312,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   <span className="subtitle">HOME MANAGER</span>
                   <h2>{editingSlide ? 'EDIT IMAGE' : 'NEW HOME IMAGE'}</h2>
                 </div>
-                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="close-btn-circle"><X /></button>
+                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="close-btn-circle" disabled={isSaving}><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">

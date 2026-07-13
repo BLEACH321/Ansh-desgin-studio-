@@ -63,14 +63,14 @@ export const useProjects = () => {
   };
 
   const updateProject = async (id: string, updated: Partial<Project>) => {
-    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=update`, updated);
+    await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
     await loadProjects();
   };
 
   const deleteProject = async (id: string) => {
     const projectToDelete = projects.find(p => p.id === id);
     if (projectToDelete) setDeletedProjects(prev => [projectToDelete, ...prev]);
-    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=delete`);
+    await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
     await loadProjects();
   };
 

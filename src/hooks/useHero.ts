@@ -53,12 +53,12 @@ export const useHero = () => {
   };
 
   const updateSlide = async (id: string, updated: Partial<HeroSlide>) => {
-    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=update`, updated);
+    await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
     await loadSlides();
   };
 
   const deleteSlide = async (id: string) => {
-    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=delete`);
+    await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
     await loadSlides();
   };
 

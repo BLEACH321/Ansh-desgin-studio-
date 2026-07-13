@@ -20,7 +20,17 @@ export const useHero = () => {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/projects.php?type=hero&t=${Date.now()}`); 
       if (res.data && Array.isArray(res.data)) {
-        setSlides(res.data);
+        const cleanUrl = (url: string) => {
+          if (!url) return url;
+          if (url.includes('anshdesignstudio.com/uploads/') && !url.includes('api.anshdesignstudio.com')) {
+            return url.replace('anshdesignstudio.com/uploads/', 'api.anshdesignstudio.com/uploads/');
+          }
+          return url;
+        };
+        setSlides(res.data.map((s: any) => ({
+          ...s,
+          image: cleanUrl(s.image)
+        })));
       } else {
         setSlides([]);
       }

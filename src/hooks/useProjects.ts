@@ -27,7 +27,19 @@ export const useProjects = () => {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/projects.php?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
-        setProjects(res.data.map((p: any) => ({ ...p, desc: p.description || '' })));
+        const cleanUrl = (url: string) => {
+          if (!url) return url;
+          if (url.includes('anshdesignstudio.com/uploads/') && !url.includes('api.anshdesignstudio.com')) {
+            return url.replace('anshdesignstudio.com/uploads/', 'api.anshdesignstudio.com/uploads/');
+          }
+          return url;
+        };
+        setProjects(res.data.map((p: any) => ({ 
+          ...p, 
+          desc: p.description || '',
+          image: cleanUrl(p.image),
+          gallery: Array.isArray(p.gallery) ? p.gallery.map(cleanUrl) : []
+        })));
       } else {
         setProjects([]);
       }

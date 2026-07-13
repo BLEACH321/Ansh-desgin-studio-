@@ -20,7 +20,17 @@ export const useTeam = () => {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/team.php?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
-        setMembers(res.data);
+        const cleanUrl = (url: string) => {
+          if (!url) return url;
+          if (url.includes('anshdesignstudio.com/uploads/') && !url.includes('api.anshdesignstudio.com')) {
+            return url.replace('anshdesignstudio.com/uploads/', 'api.anshdesignstudio.com/uploads/');
+          }
+          return url;
+        };
+        setMembers(res.data.map((m: any) => ({
+          ...m,
+          image: cleanUrl(m.image)
+        })));
       } else {
         setMembers([]);
       }

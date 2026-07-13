@@ -62,22 +62,24 @@ function App() {
         )}
       </AnimatePresence>
 
-      <main style={{ position: 'relative' }}>
-        <Navbar 
-          onAdminClick={() => setIsAdminOpen(true)} 
-          hideNav={!!selectedProject} 
-        />
-        <Hero />
-        <About />
-        <Services />
-        <Team />
-        <ArchitectureGallery onProjectClick={setSelectedProject} />
-        <InteriorGallery onProjectClick={setSelectedProject} />
-        <GraphicsExhibition onProjectClick={setSelectedProject} />
-        <Contact />
-        <Footer onAdminClick={() => setIsAdminOpen(true)} />
-        <FloatingSocials />
-      </main>
+      {!isAdminOpen && (
+        <main style={{ position: 'relative' }}>
+          <Navbar 
+            onAdminClick={() => setIsAdminOpen(true)} 
+            hideNav={!!selectedProject} 
+          />
+          <Hero />
+          <About />
+          <Services />
+          <Team />
+          <ArchitectureGallery onProjectClick={setSelectedProject} />
+          <InteriorGallery onProjectClick={setSelectedProject} />
+          <GraphicsExhibition onProjectClick={setSelectedProject} />
+          <Contact />
+          <Footer onAdminClick={() => setIsAdminOpen(true)} />
+          <FloatingSocials />
+        </main>
+      )}
 
     </>
   )

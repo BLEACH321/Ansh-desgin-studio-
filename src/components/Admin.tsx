@@ -66,6 +66,15 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     }
   };
 
+  const toServerUrl = (url: string) => {
+    if (!url) return url;
+    const uploadsIdx = url.indexOf('/uploads/');
+    if (uploadsIdx !== -1) {
+      return `http://api.anshdesignstudio.com${url.substring(uploadsIdx)}`;
+    }
+    return url;
+  };
+
   // Team Management State
   const { members, deletedMembers, addMember, updateMember, deleteMember, restoreMember, permanentlyDeleteMember, restoreDefaultTeam } = useTeam();
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -271,7 +280,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         category: 'Interior',
         description: '',
         ...newSlide,
-        image: imageUrl
+        image: toServerUrl(imageUrl)
       };
 
       if (editingSlide) {
@@ -345,8 +354,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         title: newProject.title || '',
         category: newProject.category || 'RESIDENTIAL',
         type: (newProject.type as any) || 'interior',
-        image: coverUrl,
-        gallery: galleryUrls,
+        image: toServerUrl(coverUrl),
+        gallery: galleryUrls.map(toServerUrl),
         desc: newProject.desc || '',
         location: newProject.location || '',
         year: newProject.year || '2024',
@@ -398,7 +407,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       const imageUrl = await uploadBase64Image(newMember.image);
       const memberData = {
         ...newMember,
-        image: imageUrl
+        image: toServerUrl(imageUrl)
       };
 
       if (editingMember) {

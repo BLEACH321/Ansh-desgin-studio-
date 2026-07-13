@@ -49,11 +49,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
 
       if (res.data && res.data.url) {
         return res.data.url;
@@ -64,15 +60,6 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       console.error("Error uploading image:", err);
       throw new Error(err.message || "Failed to upload image to server");
     }
-  };
-
-  const toServerUrl = (url: string) => {
-    if (!url) return url;
-    const uploadsIdx = url.indexOf('/uploads/');
-    if (uploadsIdx !== -1) {
-      return `http://api.anshdesignstudio.com${url.substring(uploadsIdx)}`;
-    }
-    return url;
   };
 
   // Team Management State
@@ -280,7 +267,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         category: 'Interior',
         description: '',
         ...newSlide,
-        image: toServerUrl(imageUrl)
+        image: imageUrl
       };
 
       if (editingSlide) {
@@ -354,8 +341,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         title: newProject.title || '',
         category: newProject.category || 'RESIDENTIAL',
         type: (newProject.type as any) || 'interior',
-        image: toServerUrl(coverUrl),
-        gallery: galleryUrls.map(toServerUrl),
+        image: coverUrl,
+        gallery: galleryUrls,
         desc: newProject.desc || '',
         location: newProject.location || '',
         year: newProject.year || '2024',
@@ -407,7 +394,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       const imageUrl = await uploadBase64Image(newMember.image);
       const memberData = {
         ...newMember,
-        image: toServerUrl(imageUrl)
+        image: imageUrl
       };
 
       if (editingMember) {

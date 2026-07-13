@@ -54,14 +54,14 @@ export const useTeam = () => {
   };
 
   const updateMember = async (id: string, updated: Partial<TeamMember>) => {
-    await axios.put(`${API_BASE_URL}/team.php?id=${id}`, updated);
+    await axios.post(`${API_BASE_URL}/team.php?id=${id}&action=update`, updated);
     await loadTeam();
   };
 
   const deleteMember = async (id: string) => {
     const memberToDelete = members.find(m => m.id === id);
     if (memberToDelete) setDeletedMembers(prev => [memberToDelete, ...prev]);
-    await axios.delete(`${API_BASE_URL}/team.php?id=${id}`);
+    await axios.post(`${API_BASE_URL}/team.php?id=${id}&action=delete`);
     await loadTeam();
   };
 

@@ -13,6 +13,16 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 $method = $_SERVER['REQUEST_METHOD'];
+if ($method === 'POST') {
+    if (isset($_GET['action'])) {
+        $action = strtoupper($_GET['action']);
+        if ($action === 'PUT' || $action === 'UPDATE') {
+            $method = 'PUT';
+        } elseif ($action === 'DELETE') {
+            $method = 'DELETE';
+        }
+    }
+}
 if ($method == 'OPTIONS') exit();
 
 switch($method) {

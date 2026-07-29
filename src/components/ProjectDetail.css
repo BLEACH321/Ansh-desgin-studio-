@@ -441,3 +441,94 @@
     display: none; /* Hide visual navigation arrows on mobile */
   }
 }
+
+/* Light Mode overrides */
+[data-theme='light'] .project-detail {
+  background: var(--bg);
+}
+
+[data-theme='light'] .detail-gallery-container {
+  background: var(--bg);
+}
+
+[data-theme='light'] .gallery-img-wrapper {
+  background: #f0f0f0;
+}
+
+[data-theme='light'] .blur-placeholder {
+  background: #e5e5e5;
+}
+
+[data-theme='light'] .floating-info-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+[data-theme='light'] .floating-info-btn:hover,
+[data-theme='light'] .floating-info-btn.active {
+  color: #d2a64c;
+  border-color: rgba(210, 166, 76, 0.3);
+  box-shadow: 0 8px 30px rgba(210, 166, 76, 0.2);
+}
+
+[data-theme='light'] .info-side-panel {
+  background: rgba(253, 250, 245, 0.85);
+  border-left-color: rgba(0, 0, 0, 0.08);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .panel-close-btn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='light'] .panel-close-btn:hover {
+  color: #d2a64c;
+}
+
+[data-theme='light'] .panel-title {
+  color: #1a1a1a;
+}
+
+[data-theme='light'] .metadata-item {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .metadata-label {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='light'] .metadata-value {
+  color: #1a1a1a;
+}
+
+[data-theme='light'] .panel-divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .panel-desc {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme='light'] .panel-nav-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+  color: #1a1a1a;
+}
+
+[data-theme='light'] .panel-nav-btn:hover:not(:disabled) {
+  border-color: #d2a64c;
+  color: #d2a64c;
+  background: rgba(210, 166, 76, 0.05);
+}
+
+[data-theme='light'] .panel-exit-btn {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+[data-theme='light'] .panel-exit-btn:hover {
+  background: #d2a64c;
+  color: #ffffff;
+}

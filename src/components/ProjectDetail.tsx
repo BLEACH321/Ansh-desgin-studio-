@@ -26,6 +26,8 @@ interface ProjectDetailProps {
 }
 
 const GalleryImage = ({ src, alt, ratio, onClick }: { src: string, alt: string, ratio?: number, onClick: () => void }) => {
+  const [loaded, setLoaded] = useState(false);
+
   return (
     <div 
       className="gallery-img-wrapper"
@@ -38,13 +40,32 @@ const GalleryImage = ({ src, alt, ratio, onClick }: { src: string, alt: string, 
         background: 'var(--surface)'
       }}
     >
+      {!loaded && (
+        <div 
+          className="blur-placeholder" 
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 1
+          }} 
+        />
+      )}
       <img 
         src={src} 
         alt={alt} 
+        onLoad={() => setLoaded(true)}
         style={{
           width: '100%',
           height: 'auto',
-          display: 'block'
+          display: 'block',
+          filter: loaded ? 'none' : 'blur(20px)',
+          transition: 'filter 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease',
+          position: 'relative',
+          zIndex: 2,
+          opacity: loaded ? 1 : 0.8
         }}
       />
     </div>

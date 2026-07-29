@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHero } from '../hooks/useHero';
 import './Hero.css';
 
@@ -79,12 +78,8 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
       {/* Softer Dark Vignette Overlay */}
       <div className="hero-overlay-vignette" />
 
-      {/* Navigation and Progress Indicators */}
+      {/* Navigation and Progress Indicators (Centered pagination numbers only) */}
       <div className="hero-navigation-bar">
-        <button onClick={prevSlide} className="hero-nav-arrow prev" aria-label="Previous slide">
-          <ChevronLeft size={24} />
-        </button>
-
         <div className="hero-pagination-dots">
           {slides.map((_, index) => (
             <button
@@ -111,10 +106,6 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
             </button>
           ))}
         </div>
-
-        <button onClick={nextSlide} className="hero-nav-arrow next" aria-label="Next slide">
-          <ChevronRight size={24} />
-        </button>
       </div>
     </section>
   );

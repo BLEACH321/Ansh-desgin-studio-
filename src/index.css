@@ -13,7 +13,7 @@
 }
 
 [data-theme='light'] {
-  --bg: #e8e9eb; /* Premium Ash Grey */
+  --bg: #ffffff; /* Pure White */
   --primary: #4d4d4d; /* 70% Grey for content */
   --secondary: #666666;
   --accent: #d2a64c; /* Premium Gold from reference */

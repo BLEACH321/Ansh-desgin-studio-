@@ -27,32 +27,44 @@ interface ProjectDetailProps {
 
 const GalleryImage = ({ src, alt, ratio, onClick }: { src: string, alt: string, ratio?: number, onClick: () => void }) => {
   const [loaded, setLoaded] = useState(false);
-  
-  // Calculate padding bottom based on aspect ratio to prevent layout shift
-  const paddingBottom = ratio ? `${(1 / ratio) * 100}%` : '75%';
 
   return (
     <div 
       className="gallery-img-wrapper"
       onClick={onClick}
-      style={{ position: 'relative', width: '100%', overflow: 'hidden' }}
+      style={{ 
+        position: 'relative', 
+        width: '100%', 
+        overflow: 'hidden',
+        aspectRatio: ratio ? `${ratio}` : '4/3',
+        background: 'var(--surface)'
+      }}
     >
       {!loaded && (
-        <div className="blur-placeholder" style={{ paddingBottom, width: '100%', height: 0 }} />
+        <div 
+          className="blur-placeholder" 
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 1
+          }} 
+        />
       )}
       <img 
         src={src} 
         alt={alt} 
-        loading="lazy" 
-        decoding="async" 
         onLoad={() => setLoaded(true)}
         style={{
-          opacity: loaded ? 1 : 0,
-          filter: loaded ? 'none' : 'blur(20px)',
-          transition: 'opacity 0.6s ease, filter 0.6s ease',
           width: '100%',
           height: 'auto',
-          display: 'block'
+          display: 'block',
+          filter: loaded ? 'none' : 'blur(15px)',
+          transition: 'filter 0.5s ease',
+          position: 'relative',
+          zIndex: 2
         }}
       />
     </div>

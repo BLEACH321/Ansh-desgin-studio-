@@ -78,7 +78,7 @@ const ArchitectureGallery = ({ onProjectClick }: { onProjectClick: (project: any
                 delay: (idx % 3) * 0.1,
                 ease: [0.16, 1, 0.3, 1]
               }}
-              className={`arch-item ${orientations[item.id] || 'orientation-square'}`}
+              className={`arch-item ${orientations[item.id] ? `orientation-${orientations[item.id]}` : 'orientation-square'}`}
               onClick={() => onProjectClick(item)}
             >
               <div className="arch-item-inner">

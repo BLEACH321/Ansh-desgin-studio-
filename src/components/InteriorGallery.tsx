@@ -99,7 +99,7 @@ const InteriorGallery = ({ onProjectClick }: { onProjectClick: (project: any) =>
                 delay: (idx % 3) * 0.1,
                 ease: [0.16, 1, 0.3, 1]
               }}
-              className={`portfolio-item ${orientations[item.id] || 'orientation-square'}`}
+              className={`portfolio-item ${orientations[item.id] ? `orientation-${orientations[item.id]}` : 'orientation-square'}`}
               onClick={() => onProjectClick(item)}
             >
               <div className="portfolio-item-inner">

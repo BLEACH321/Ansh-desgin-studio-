@@ -277,7 +277,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
               key={i}
               src={img}
               alt={`${project.title} view ${i + 1}`}
-              orientation={orientations[img] || 'orientation-square'}
+              orientation={orientations[img] ? `orientation-${orientations[img]}` : 'orientation-square'}
               onClick={() => {
                 setSelectedImgIndex(i);
                 setZoomLevel(1);

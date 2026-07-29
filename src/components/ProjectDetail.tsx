@@ -342,7 +342,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
           whileHover={{ scale: 1.08 }}
           transition={{ duration: 0.3 }}
         >
-          <Sparkles size={24} className="luxury-icon" />
+          {isInfoOpen ? (
+            <X size={24} className="luxury-icon" />
+          ) : (
+            <Sparkles size={24} className="luxury-icon" />
+          )}
         </motion.button>
 
         {/* Slide-out Side Information Panel */}
@@ -355,12 +359,6 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
               transition={{ type: 'spring', damping: 28, stiffness: 200 }}
               className="info-side-panel"
             >
-              <div className="panel-header">
-                <button className="panel-close-btn" onClick={() => setIsInfoOpen(false)}>
-                  <X size={24} />
-                </button>
-              </div>
-
               <div className="panel-content">
                 <span className="panel-category">{project.category}</span>
                 <h2 className="panel-title">{project.title}</h2>

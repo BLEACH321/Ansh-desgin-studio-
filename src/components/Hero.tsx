@@ -40,6 +40,41 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
     return <section id="home" className="hero-fullscreen" style={{ height: '100vh', background: '#000' }} />;
   }
 
+  // Stagger animation variants for slide contents
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.1
+      }
+    },
+    exit: {
+      opacity: 0,
+      transition: {
+        staggerChildren: 0.08,
+        staggerDirection: -1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      filter: 'blur(0px)',
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } 
+    },
+    exit: { 
+      opacity: 0, 
+      y: -20, 
+      filter: 'blur(10px)',
+      transition: { duration: 0.4, ease: 'easeIn' } 
+    }
+  };
+
   return (
     <section id="home" className="hero-fullscreen">
       {/* Fullscreen Ken Burns Background Image */}
@@ -63,55 +98,30 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -40 }}
-            transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="hero-slide-info"
           >
-            <span className="hero-slide-category">
+            <motion.span variants={itemVariants} className="hero-slide-category">
               {slides[currentIndex].category || 'Interior Design'}
-            </span>
-            <h1 className="hero-slide-title">
+            </motion.span>
+            <motion.h1 variants={itemVariants} className="hero-slide-title">
               {slides[currentIndex].title || 'ANSH DESIGN STUDIO'}
-            </h1>
-            <p className="hero-slide-description">
+            </motion.h1>
+            <motion.p variants={itemVariants} className="hero-slide-description">
               {slides[currentIndex].description || 'Crafting sophisticated living spaces that blend modern aesthetics with ultimate comfort.'}
-            </p>
+            </motion.p>
             
-            <div className="hero-slide-actions">
+            <motion.div variants={itemVariants} className="hero-slide-actions">
               <button onClick={handleExploreProject} className="hero-cta-btn primary">
                 EXPLORE CASE STUDY
               </button>
               <a href="#contact" className="hero-cta-btn secondary">
                 CONTACT US
               </a>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Slide Metadata Panel */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1], delay: 0.15 }}
-            className="hero-slide-meta"
-          >
-            <div className="meta-item">
-              <span className="meta-label">LOCATION</span>
-              <span className="meta-value">{slides[currentIndex].location || 'New Delhi, India'}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">YEAR</span>
-              <span className="meta-value">{slides[currentIndex].year || '2025'}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">AREA</span>
-              <span className="meta-value">{slides[currentIndex].area || '450 SQFT'}</span>
-            </div>
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>

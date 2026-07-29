@@ -606,8 +606,8 @@
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 8px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -616,28 +616,29 @@
 .hero-cta-btn.primary {
   background: #c19a6b;
   color: #000;
-  box-shadow: 0 10px 30px rgba(193, 154, 107, 0.2);
+  box-shadow: 0 8px 25px rgba(193, 154, 107, 0.25);
 }
 
 .hero-cta-btn.primary:hover {
-  background: #fff;
-  color: #000;
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(255, 255, 255, 0.15);
+  background: #d2a64c;
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 15px 35px rgba(210, 166, 76, 0.4);
 }
 
 .hero-cta-btn.secondary {
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #fff;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .hero-cta-btn.secondary:hover {
-  border-color: #fff;
-  background: #fff;
-  color: #000;
-  transform: translateY(-3px);
+  border-color: #d2a64c;
+  background: rgba(210, 166, 76, 0.1);
+  color: #d2a64c;
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 15px 35px rgba(210, 166, 76, 0.2);
 }
 
 /* Metadata Panel */
@@ -698,16 +699,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.4s ease;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   font-size: 1.2rem;
   backdrop-filter: blur(5px);
 }
 
 .hero-nav-arrow:hover {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
-  transform: scale(1.05);
+  background: #d2a64c;
+  color: #ffffff;
+  border-color: #d2a64c;
+  transform: scale(1.08);
+  box-shadow: 0 8px 25px rgba(210, 166, 76, 0.3);
 }
 
 .hero-pagination-dots {
@@ -727,6 +729,11 @@
   gap: 0.5rem;
   transition: all 0.3s ease;
   padding: 0;
+}
+
+.hero-dot-item:hover {
+  color: #d2a64c;
+  transform: translateY(-2px);
 }
 
 .dot-number {

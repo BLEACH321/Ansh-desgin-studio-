@@ -20,15 +20,6 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides]);
 
-  const handleExploreProject = () => {
-    if (onProjectClick && slides[currentIndex]) {
-      onProjectClick({
-        ...slides[currentIndex],
-        desc: slides[currentIndex].description || ''
-      });
-    }
-  };
-
   useEffect(() => {
     if (!slides || slides.length === 0) return;
     const timer = setInterval(nextSlide, 5000); // 5 seconds per slide
@@ -39,41 +30,6 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
   if (!slides || slides.length === 0) {
     return <section id="home" className="hero-fullscreen" style={{ height: '100vh', background: '#000' }} />;
   }
-
-  // Stagger animation variants for slide contents
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.1
-      }
-    },
-    exit: {
-      opacity: 0,
-      transition: {
-        staggerChildren: 0.08,
-        staggerDirection: -1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      filter: 'blur(0px)',
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } 
-    },
-    exit: { 
-      opacity: 0, 
-      y: -20, 
-      filter: 'blur(10px)',
-      transition: { duration: 0.4, ease: 'easeIn' } 
-    }
-  };
 
   return (
     <section id="home" className="hero-fullscreen">
@@ -92,39 +48,6 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
 
       {/* Dark Vignette Overlay */}
       <div className="hero-overlay-vignette" />
-
-      {/* Content Container */}
-      <div className="hero-content-container">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="hero-slide-info"
-          >
-            <motion.span variants={itemVariants} className="hero-slide-category">
-              {slides[currentIndex].category || 'Interior Design'}
-            </motion.span>
-            <motion.h1 variants={itemVariants} className="hero-slide-title">
-              {slides[currentIndex].title || 'ANSH DESIGN STUDIO'}
-            </motion.h1>
-            <motion.p variants={itemVariants} className="hero-slide-description">
-              {slides[currentIndex].description || 'Crafting sophisticated living spaces that blend modern aesthetics with ultimate comfort.'}
-            </motion.p>
-            
-            <motion.div variants={itemVariants} className="hero-slide-actions">
-              <button onClick={handleExploreProject} className="hero-cta-btn primary">
-                EXPLORE CASE STUDY
-              </button>
-              <a href="#contact" className="hero-cta-btn secondary">
-                CONTACT US
-              </a>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
 
       {/* Navigation and Progress Indicators */}
       <div className="hero-navigation-bar">

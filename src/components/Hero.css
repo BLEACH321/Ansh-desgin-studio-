@@ -511,7 +511,8 @@
 .hero-fullscreen-bg-inner {
   width: 100%;
   height: 100%;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center;
   transform-origin: center;
   animation: kenBurnsZoom 36s ease-in-out infinite;

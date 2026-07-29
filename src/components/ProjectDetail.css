@@ -32,8 +32,8 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr); /* 6 columns on desktop */
   grid-auto-flow: dense;
-  gap: 14px; /* Equal spacing 12-16px */
-  grid-auto-rows: 280px; /* Row height base */
+  gap: 16px; /* Equal spacing 12-16px */
+  grid-auto-rows: 180px; /* Row height base for aspect ratio match */
 }
 
 /* Image Wrapper with Rounded Corners & Animations */
@@ -64,18 +64,18 @@
 
 /* Dynamic Image Orientation Classes */
 .gallery-img-wrapper.orientation-landscape {
-  grid-column: span 2;
-  grid-row: span 1;
+  grid-column: span 3;
+  grid-row: span 2; /* 3 cols x 2 rows (aspect ratio ~1.66, landscape) */
 }
 
 .gallery-img-wrapper.orientation-portrait {
-  grid-column: span 1;
-  grid-row: span 2;
+  grid-column: span 2;
+  grid-row: span 3; /* 2 cols x 3 rows (aspect ratio ~0.74, portrait) */
 }
 
 .gallery-img-wrapper.orientation-square {
-  grid-column: span 1;
-  grid-row: span 1;
+  grid-column: span 2;
+  grid-row: span 2; /* 2 cols x 2 rows (aspect ratio ~1.1, square) */
 }
 
 /* Blur Placeholder */

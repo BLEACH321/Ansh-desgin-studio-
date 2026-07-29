@@ -3,6 +3,12 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('memory_limit', '512M');
+ini_set('post_max_size', '128M');
+ini_set('upload_max_filesize', '128M');
+
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
@@ -22,7 +28,8 @@ if (isset($_FILES["image"])) {
         // On GoDaddy, you might want to return the full URL
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $host = $_SERVER['HTTP_HOST'];
-        $full_url = "$protocol://$host/uploads/$new_filename";
+        $script_dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+        $full_url = "$protocol://$host$script_dir/uploads/$new_filename";
         
         echo json_encode(["url" => $full_url]);
     } else {

@@ -8,11 +8,24 @@ ini_set('post_max_size', '128M');
 ini_set('upload_max_filesize', '128M');
 require_once 'config.php';
 
+// Auto-migrate: Ensure projects table type column is VARCHAR(50) to support 'hero'
+$conn->query("ALTER TABLE `projects` MODIFY COLUMN `type` VARCHAR(50) NOT NULL");
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 $method = $_SERVER['REQUEST_METHOD'];
+if ($method === 'POST') {
+    if (isset($_GET['action'])) {
+        $action = strtoupper($_GET['action']);
+        if ($action === 'PUT' || $action === 'UPDATE') {
+            $method = 'PUT';
+        } elseif ($action === 'DELETE') {
+            $method = 'DELETE';
+        }
+    }
+}
 if ($method == 'OPTIONS') exit();
 
 switch($method) {
@@ -34,12 +47,12 @@ switch($method) {
         $data = json_decode(file_get_contents("php://input"), true);
         if (!$data) sendJSON(["error" => "No data"], 400);
 
-        $title = $conn->real_escape_string($data['title']);
-        $category = $conn->real_escape_string($data['category']);
-        $type = $conn->real_escape_string($data['type']);
-        $image = $conn->real_escape_string($data['image']);
-        $gallery = $conn->real_escape_string(json_encode($data['gallery']));
-        $description = $conn->real_escape_string($data['desc'] ?? '');
+        $title = $conn->real_escape_string($data['title'] ?? '');
+        $category = $conn->real_escape_string($data['category'] ?? '');
+        $type = $conn->real_escape_string($data['type'] ?? $_GET['type'] ?? '');
+        $image = $conn->real_escape_string($data['image'] ?? '');
+        $gallery = $conn->real_escape_string(json_encode($data['gallery'] ?? []));
+        $description = $conn->real_escape_string($data['desc'] ?? $data['description'] ?? '');
         $location = $conn->real_escape_string($data['location'] ?? '');
         $year = $conn->real_escape_string($data['year'] ?? '');
         $area = $conn->real_escape_string($data['area'] ?? '');

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useHero } from '../hooks/useHero';
 import './Hero.css';
 
-const Hero = () => {
+const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) => {
   const { slides } = useHero();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -20,107 +20,138 @@ const Hero = () => {
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides]);
 
+  const handleExploreProject = () => {
+    if (onProjectClick && slides[currentIndex]) {
+      onProjectClick({
+        ...slides[currentIndex],
+        desc: slides[currentIndex].description || ''
+      });
+    }
+  };
+
   useEffect(() => {
     if (!slides || slides.length === 0) return;
-    const timer = setInterval(nextSlide, 4500);
+    const timer = setInterval(nextSlide, 5000); // 5 seconds per slide
     return () => clearInterval(timer);
   }, [nextSlide, slides]);
 
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-      scale: 0.95,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        x: { type: "spring", stiffness: 400, damping: 35 },
-        opacity: { duration: 0.3 },
-        scale: { duration: 0.3 }
-      }
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-      scale: 0.95,
-      transition: {
-        x: { type: "spring", stiffness: 400, damping: 35 },
-        opacity: { duration: 0.2 }
-      }
-    })
-  };
-
   // Graceful return for empty state after all hooks are called
   if (!slides || slides.length === 0) {
-    return <section id="home" className="hero-premium" style={{ height: '100vh', background: '#000' }} />;
+    return <section id="home" className="hero-fullscreen" style={{ height: '100vh', background: '#000' }} />;
   }
 
   return (
-    <section id="home" className="hero-premium">
-      <div className="hero-background-blur">
-        <motion.img
+    <section id="home" className="hero-fullscreen">
+      {/* Fullscreen Ken Burns Background Image */}
+      <AnimatePresence initial={false} mode="wait">
+        <motion.div
           key={currentIndex}
-          src={slides[currentIndex].image}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          transition={{ duration: 1.2 }}
-          className="blur-bg-img"
+          initial={{ scale: 1.08, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.8, ease: "easeInOut" }}
+          className="hero-fullscreen-bg"
+          style={{ backgroundImage: `url(${slides[currentIndex].image})` }}
         />
-      </div>
+      </AnimatePresence>
 
-      <div className="card-container">
-        <AnimatePresence initial={false} custom={direction}>
+      {/* Dark Vignette Overlay */}
+      <div className="hero-overlay-vignette" />
+
+      {/* Content Container */}
+      <div className="hero-content-container">
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="image-card-wrapper"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+            className="hero-slide-info"
           >
-            <div className="image-card-inner">
-              <img
-                src={slides[currentIndex].image}
-                alt={`Slide ${currentIndex + 1}`}
-                className="main-hero-img"
-              />
-              <div className="card-glass-overlay"></div>
+            <span className="hero-slide-category">
+              {slides[currentIndex].category || 'Interior Design'}
+            </span>
+            <h1 className="hero-slide-title">
+              {slides[currentIndex].title || 'ANSH DESIGN STUDIO'}
+            </h1>
+            <p className="hero-slide-description">
+              {slides[currentIndex].description || 'Crafting sophisticated living spaces that blend modern aesthetics with ultimate comfort.'}
+            </p>
+            
+            <div className="hero-slide-actions">
+              <button onClick={handleExploreProject} className="hero-cta-btn primary">
+                EXPLORE CASE STUDY
+              </button>
+              <a href="#contact" className="hero-cta-btn secondary">
+                CONTACT US
+              </a>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Slide Metadata Panel */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1], delay: 0.15 }}
+            className="hero-slide-meta"
+          >
+            <div className="meta-item">
+              <span className="meta-label">LOCATION</span>
+              <span className="meta-value">{slides[currentIndex].location || 'New Delhi, India'}</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">YEAR</span>
+              <span className="meta-value">{slides[currentIndex].year || '2025'}</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">AREA</span>
+              <span className="meta-value">{slides[currentIndex].area || '450 SQFT'}</span>
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="pagination-v2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            className={`pagination-v2-item ${index === currentIndex ? 'active' : ''}`}
-            onClick={() => {
-              setDirection(index > currentIndex ? 1 : -1);
-              setCurrentIndex(index);
-            }}
-          >
-            <span className="page-num">0{index + 1}</span>
-            <div className="page-line-wrapper">
-              <div className="page-line"></div>
-              {index === currentIndex && (
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  key={currentIndex}
-                  transition={{ duration: 4.5, ease: "linear" }}
-                  className="page-line-progress"
-                />
-              )}
-            </div>
-          </button>
-        ))}
+      {/* Navigation and Progress Indicators */}
+      <div className="hero-navigation-bar">
+        <button onClick={prevSlide} className="hero-nav-arrow prev" aria-label="Previous slide">
+          ←
+        </button>
+
+        <div className="hero-pagination-dots">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              className={`hero-dot-item ${index === currentIndex ? 'active' : ''}`}
+              onClick={() => {
+                setDirection(index > currentIndex ? 1 : -1);
+                setCurrentIndex(index);
+              }}
+            >
+              <span className="dot-number">0{index + 1}</span>
+              <div className="dot-line-wrapper">
+                <div className="dot-line" />
+                {index === currentIndex && (
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    key={currentIndex}
+                    transition={{ duration: 5, ease: "linear" }}
+                    className="dot-line-progress"
+                  />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <button onClick={nextSlide} className="hero-nav-arrow next" aria-label="Next slide">
+          →
+        </button>
       </div>
     </section>
   );

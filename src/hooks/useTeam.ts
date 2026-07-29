@@ -22,9 +22,10 @@ export const useTeam = () => {
       if (res.data && Array.isArray(res.data)) {
         const cleanUrl = (url: string) => {
           if (!url) return url;
-          const uploadsIdx = url.indexOf('/uploads/');
+          if (url.startsWith('data:')) return url;
+          const uploadsIdx = url.indexOf('uploads/');
           if (uploadsIdx !== -1) {
-            return `${API_BASE_URL}${url.substring(uploadsIdx)}`;
+            return `${API_BASE_URL}/${url.substring(uploadsIdx)}`;
           }
           return url;
         };
@@ -54,14 +55,14 @@ export const useTeam = () => {
   };
 
   const updateMember = async (id: string, updated: Partial<TeamMember>) => {
-    await axios.put(`${API_BASE_URL}/team.php?id=${id}`, updated);
+    await axios.post(`${API_BASE_URL}/team.php?id=${id}&action=update`, updated);
     await loadTeam();
   };
 
   const deleteMember = async (id: string) => {
     const memberToDelete = members.find(m => m.id === id);
     if (memberToDelete) setDeletedMembers(prev => [memberToDelete, ...prev]);
-    await axios.delete(`${API_BASE_URL}/team.php?id=${id}`);
+    await axios.post(`${API_BASE_URL}/team.php?id=${id}&action=delete`);
     await loadTeam();
   };
 

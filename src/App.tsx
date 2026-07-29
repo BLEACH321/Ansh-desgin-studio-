@@ -14,11 +14,13 @@ import Admin from './components/Admin'
 import ProjectDetail from './components/ProjectDetail'
 import ArchitectureGallery from './components/ArchitectureGallery'
 import FloatingSocials from './components/FloatingSocials'
+import { useProjects } from './hooks/useProjects'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const { projects } = useProjects();
 
   // Simple routing for admin
   useEffect(() => {
@@ -58,6 +60,8 @@ function App() {
           <ProjectDetail 
             project={selectedProject} 
             onClose={() => setSelectedProject(null)} 
+            onProjectChange={setSelectedProject}
+            allProjects={projects}
           />
         )}
       </AnimatePresence>
@@ -65,9 +69,10 @@ function App() {
       <main style={{ position: 'relative' }}>
         <Navbar 
           onAdminClick={() => setIsAdminOpen(true)} 
-          hideNav={!!selectedProject} 
+          hideNav={false} 
+          onLinkClick={() => setSelectedProject(null)}
         />
-        <Hero />
+        <Hero onProjectClick={setSelectedProject} />
         <About />
         <Services />
         <Team />
@@ -82,6 +87,5 @@ function App() {
     </>
   )
 }
-
 
 export default App

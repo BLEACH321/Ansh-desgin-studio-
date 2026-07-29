@@ -35,15 +35,26 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     });
   };
 
+  const base64ToBlob = (base64Data: string): { blob: Blob, ext: string } => {
+    const parts = base64Data.split(',');
+    const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const ext = mime.split('/')[1] || 'jpeg';
+    return { blob: new Blob([u8arr], { type: mime }), ext };
+  };
+
   const uploadBase64Image = async (base64Data: string): Promise<string> => {
     if (!base64Data || !base64Data.startsWith('data:image/')) {
       return base64Data;
     }
 
     try {
-      const response = await fetch(base64Data);
-      const blob = await response.blob();
-      const ext = base64Data.split(';')[0].split('/')[1] || 'jpeg';
+      const { blob, ext } = base64ToBlob(base64Data);
       const file = new File([blob], `image_${Date.now()}.${ext}`, { type: blob.type });
 
       const formData = new FormData();
@@ -252,29 +263,77 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     }
   };
 
+  const handleSlideGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const rawUrl = await readRawFile(file);
+      setEnhancerSrc(rawUrl);
+      setOnEnhancerSave(() => (enhancedUrl: string) => {
+        setNewSlide((prev: any) => ({
+          ...prev,
+          gallery: [...(prev.gallery || []), enhancedUrl]
+        }));
+        setEnhancerSrc(null);
+      });
+    } catch (err) {
+      showAlert("IMAGE ERROR", "Failed to add image to gallery.");
+    }
+  };
+
+  const handleReplaceSlideGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const rawUrl = await readRawFile(file);
+      setEnhancerSrc(rawUrl);
+      setOnEnhancerSave(() => (enhancedUrl: string) => {
+        setNewSlide((prev: any) => {
+          const newGallery = [...(prev.gallery || [])];
+          newGallery[index] = enhancedUrl;
+          return { ...prev, gallery: newGallery };
+        });
+        setEnhancerSrc(null);
+      });
+    } catch (err) {
+      showAlert("IMAGE ERROR", "Failed to replace gallery image.");
+    }
+  };
+
   const handleSaveSlide = async () => {
     if (!newSlide.image) {
       showAlert('MISSING PHOTO', 'Please upload a photo for the homepage.');
       return;
     }
 
-    const isEditMode = !!editingSlide;
-    const slideId = editingSlide?.id;
-
     setIsSaving(true);
     try {
+      // 1. Upload Cover Image if it's base64
       const imageUrl = await uploadBase64Image(newSlide.image);
+
+      // 2. Upload Gallery Images sequentially
+      const galleryUrls: string[] = [];
+      const rawGallery = (newSlide.gallery || []).filter((img: any) => typeof img === 'string' && img.trim() !== '');
+      for (const img of rawGallery) {
+        const url = await uploadBase64Image(img);
+        galleryUrls.push(url);
+      }
+
       // Provide default values for unused fields
       const slideData = {
         title: 'Home Slide',
         category: 'Interior',
         description: '',
         ...newSlide,
-        image: imageUrl
+        type: 'hero',
+        image: imageUrl,
+        gallery: galleryUrls
       };
 
-      if (isEditMode && slideId) {
-        await updateSlide(slideId, slideData);
+      if (editingSlide) {
+        await updateSlide(editingSlide.id, slideData);
         setToast({ show: true, message: `Updated Home Image` });
       } else {
         await addSlide(slideData);
@@ -330,9 +389,6 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
-    const isEditMode = !!editingProject;
-    const projectId = editingProject?.id;
-
     setIsSaving(true);
     try {
       // 1. Upload Cover Image if it's base64
@@ -359,8 +415,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         size: newProject.size || 'item-medium',
       };
 
-      if (isEditMode && projectId) {
-        await updateProject(projectId, projectData as Project);
+      if (editingProject) {
+        await updateProject(editingProject.id, projectData as Project);
         setToast({
           show: true,
           message: `Changes saved for "${projectData.title}".`
@@ -398,9 +454,6 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
       return;
     }
 
-    const isEditMode = !!editingMember;
-    const memberId = editingMember?.id;
-
     setIsSaving(true);
     try {
       const imageUrl = await uploadBase64Image(newMember.image);
@@ -409,8 +462,8 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
         image: imageUrl
       };
 
-      if (isEditMode && memberId) {
-        await updateMember(memberId, memberData);
+      if (editingMember) {
+        await updateMember(editingMember.id, memberData);
         setToast({ show: true, message: `Updated ${newMember.name}` });
       } else {
         await addMember(memberData as Omit<TeamMember, 'id'>);
@@ -482,9 +535,10 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
     setToast({ show: false, message: '' });
   };
 
-  const filteredProjects = filter === 'all'
+  const filteredProjects = (filter === 'all'
     ? projects
-    : projects.filter(p => p.type === filter);
+    : projects.filter(p => p.type === filter)
+  ).filter(p => p.type !== 'hero');
 
   if (!isAuthenticated) {
     return (
@@ -888,7 +942,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   setIsAdding(false);
                   setEditingProject(null);
                   setNewProject({ type: 'interior', category: 'RESIDENTIAL', gallery: [], size: 'item-medium' });
-                }} className="close-btn-circle" disabled={isSaving}><X /></button>
+                }} className="close-btn-circle"><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
@@ -1211,7 +1265,7 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   <span className="subtitle">TEAM MANAGER</span>
                   <h2>{editingMember ? 'EDIT MEMBER' : 'NEW CREATIVE'}</h2>
                 </div>
-                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="close-btn-circle" disabled={isSaving}><X /></button>
+                <button onClick={() => { setIsAddingMember(false); setEditingMember(null); }} className="close-btn-circle"><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
@@ -1312,37 +1366,123 @@ const Admin = ({ onExit }: { onExit: () => void }) => {
                   <span className="subtitle">HOME MANAGER</span>
                   <h2>{editingSlide ? 'EDIT IMAGE' : 'NEW HOME IMAGE'}</h2>
                 </div>
-                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="close-btn-circle" disabled={isSaving}><X /></button>
+                <button onClick={() => { setIsAddingSlide(false); setEditingSlide(null); setNewSlide({}); }} className="close-btn-circle"><X /></button>
               </div>
 
               <div className="modal-scroll-advanced">
                 <div className="form-group-wrap">
+                  <div className="input-field full">
+                    <label>SLIDE TITLE</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. URBAN ELEGANCE"
+                      value={newSlide.title || ''}
+                      onChange={e => setNewSlide({ ...newSlide, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="input-field full">
+                    <label>CATEGORY</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Interior Design, Architecture..."
+                      value={newSlide.category || ''}
+                      onChange={e => setNewSlide({ ...newSlide, category: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="input-field full">
+                    <label>THE STORY (DESCRIPTION)</label>
+                    <textarea
+                      rows={4}
+                      placeholder="Describe the slide design vision..."
+                      value={newSlide.description || ''}
+                      onChange={e => setNewSlide({ ...newSlide, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-grid-3">
+                    <div className="input-field">
+                      <label><MapPin size={12} /> LOCATION</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. New Delhi, IN"
+                        value={newSlide.location || ''}
+                        onChange={e => setNewSlide({ ...newSlide, location: e.target.value })}
+                      />
+                    </div>
+                    <div className="input-field">
+                      <label><Calendar size={12} /> YEAR</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 2025"
+                        value={newSlide.year || ''}
+                        onChange={e => setNewSlide({ ...newSlide, year: e.target.value })}
+                      />
+                    </div>
+                    <div className="input-field">
+                      <label><Maximize size={12} /> AREA</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 450 SQFT"
+                        value={newSlide.area || ''}
+                        onChange={e => setNewSlide({ ...newSlide, area: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
                   <div className="form-section-advanced">
-                    <label className="section-label">UPLOAD IMAGE</label>
-                    <p className="upload-tip">Upload a high-resolution image for the homepage hero section.</p>
-                    <div className="admin-image-upload">
-                      {newSlide.image ? (
-                        <div className="upload-preview-container">
-                          <img src={newSlide.image} alt="Preview" className="upload-preview-main" />
-                          <button
-                            className="remove-img-btn"
-                            onClick={() => setNewSlide({ ...newSlide, image: '' })}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                    <label className="section-label">VISUAL ASSETS</label>
+                    <div className="asset-upload-container">
+                      <div className="main-upload">
+                        <label>COVER IMAGE</label>
+                        <div className="luxury-upload-box">
+                          {newSlide.image ? (
+                            <div className="preview-wrap">
+                              <img src={newSlide.image} alt="" />
+                              <div className="asset-actions">
+                                <label className="asset-action-btn edit" title="Replace Image">
+                                  <RefreshCw size={14} />
+                                  <input type="file" accept="image/*" hidden onChange={handleSlidePhotoUpload} />
+                                </label>
+                                <button className="asset-action-btn delete" onClick={() => setNewSlide({ ...newSlide, image: '' })} title="Remove Image">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="luxury-upload-label">
+                              <div className="upload-icon-pulse"><Plus /></div>
+                              <span>SELECT COVER PHOTO</span>
+                              <input type="file" accept="image/*" hidden onChange={handleSlidePhotoUpload} />
+                            </label>
+                          )}
                         </div>
-                      ) : (
-                        <label className="upload-trigger-large">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleSlidePhotoUpload}
-                            hidden
-                          />
-                          <ImageIcon size={32} />
-                          <span>CHOOSE IMAGE</span>
-                        </label>
-                      )}
+                      </div>
+
+                      <div className="gallery-upload">
+                        <label>GALLERY COLLECTIONS</label>
+                        <div className="luxury-gallery-grid">
+                          {(newSlide.gallery || []).map((img: any, i: number) => (
+                            <div key={i} className="preview-wrap-small">
+                              <img src={img} alt="" />
+                              <div className="asset-actions-small">
+                                <label className="asset-action-btn-small edit" title="Replace">
+                                  <RefreshCw size={10} />
+                                  <input type="file" accept="image/*" hidden onChange={(e) => handleReplaceSlideGalleryImage(e, i)} />
+                                </label>
+                                <button className="asset-action-btn-small delete" onClick={() => setNewSlide({ ...newSlide, gallery: newSlide.gallery?.filter((_: any, idx: number) => idx !== i) })} title="Remove">
+                                  <X size={10} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <label className="luxury-upload-label small">
+                            <Plus size={20} />
+                            <input type="file" accept="image/*" multiple hidden onChange={handleSlideGalleryUpload} />
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

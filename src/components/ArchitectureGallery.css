@@ -5,24 +5,37 @@
 
 .arch-header {
   margin-bottom: 3rem;
-  text-align: right; /* Different: aligned to right instead of left/center */
+  text-align: right;
 }
-
 
 .arch-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-flow: dense;
   gap: 2rem;
-  grid-auto-rows: 400px;
+  grid-auto-rows: 300px;
 }
 
 .arch-item {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  grid-column: span 1 !important;
-  grid-row: span 1 !important;
   border-radius: 20px;
+}
+
+.arch-item.orientation-landscape {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.arch-item.orientation-portrait {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.arch-item.orientation-square {
+  grid-column: span 1;
+  grid-row: span 1;
 }
 
 .arch-item-inner {
@@ -80,7 +93,6 @@
   transform: translateY(0);
 }
 
-
 .arch-project-category {
   font-size: 0.75rem;
   letter-spacing: 0.4em;
@@ -126,13 +138,47 @@
     text-align: center;
   }
   
-  .arch-filters {
-    justify-content: center;
-  }
-  
   .arch-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 304.5px;
-    gap: 1.484rem;
+    grid-auto-rows: 300px;
+    gap: 1.5rem;
+  }
+  
+  .arch-item.orientation-landscape {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  
+  .arch-item.orientation-portrait {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+  
+  .arch-item.orientation-square {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .arch-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 250px;
+    gap: 1.25rem;
+  }
+  
+  .arch-item.orientation-landscape {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  
+  .arch-item.orientation-portrait {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+  
+  .arch-item.orientation-square {
+    grid-column: span 1;
+    grid-row: span 1;
   }
 }

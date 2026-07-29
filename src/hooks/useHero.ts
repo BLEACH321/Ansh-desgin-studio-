@@ -9,6 +9,7 @@ export interface HeroSlide {
   category: string;
   description: string;
   link: string;
+  type?: string;
 }
 
 export const useHero = () => {
@@ -22,15 +23,17 @@ export const useHero = () => {
       if (res.data && Array.isArray(res.data)) {
         const cleanUrl = (url: string) => {
           if (!url) return url;
-          const uploadsIdx = url.indexOf('/uploads/');
+          if (url.startsWith('data:')) return url;
+          const uploadsIdx = url.indexOf('uploads/');
           if (uploadsIdx !== -1) {
-            return `${API_BASE_URL}${url.substring(uploadsIdx)}`;
+            return `${API_BASE_URL}/${url.substring(uploadsIdx)}`;
           }
           return url;
         };
         setSlides(res.data.map((s: any) => ({
           ...s,
-          image: cleanUrl(s.image)
+          image: cleanUrl(s.image),
+          gallery: Array.isArray(s.gallery) ? s.gallery.map(cleanUrl) : []
         })));
       } else {
         setSlides([]);
@@ -53,12 +56,12 @@ export const useHero = () => {
   };
 
   const updateSlide = async (id: string, updated: Partial<HeroSlide>) => {
-    await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
+    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=update`, updated);
     await loadSlides();
   };
 
   const deleteSlide = async (id: string) => {
-    await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
+    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=delete`);
     await loadSlides();
   };
 

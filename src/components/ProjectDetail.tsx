@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import './ProjectDetail.css';
 
 interface Project {
@@ -11,218 +12,432 @@ interface Project {
   location?: string;
   year?: string;
   area?: string;
+  client?: string;
+  services?: string;
   gallery?: string[];
+  type?: 'interior' | 'graphics' | 'architecture';
 }
 
 interface ProjectDetailProps {
   project: Project;
   onClose: () => void;
+  onProjectChange?: (project: Project) => void;
+  allProjects?: Project[];
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose }) => {
-  const [selectedImgIndex, setSelectedImgIndex] = React.useState<number | null>(null);
+const GalleryImage = ({ src, alt, orientation, onClick }: { src: string, alt: string, orientation: string, onClick: () => void }) => {
+  const [loaded, setLoaded] = useState(false);
+  
+  return (
+    <div 
+      className={`gallery-img-wrapper ${orientation}`}
+      onClick={onClick}
+      style={{ position: 'relative' }}
+    >
+      {!loaded && (
+        <div className="blur-placeholder" />
+      )}
+      <img 
+        src={src} 
+        alt={alt} 
+        loading="lazy" 
+        decoding="async" 
+        onLoad={() => setLoaded(true)}
+        style={{
+          opacity: loaded ? 1 : 0,
+          filter: loaded ? 'none' : 'blur(20px)',
+          transition: 'opacity 0.6s ease, filter 0.6s ease'
+        }}
+      />
+    </div>
+  );
+};
 
-  const galleryImages = project.gallery && project.gallery.length > 0 
-    ? [project.image, ...project.gallery] 
-    : [project.image];
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProjectChange, allProjects = [] }) => {
+  const [selectedImgIndex, setSelectedImgIndex] = useState<number | null>(null);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [orientations, setOrientations] = useState<Record<string, 'landscape' | 'portrait' | 'square'>>({});
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Lightbox Zoom & Pan State
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+
+  const galleryImages = useMemo(() => {
+    return project.gallery && project.gallery.length > 0 
+      ? [project.image, ...project.gallery] 
+      : [project.image];
+  }, [project]);
+
+  // Determine Image Orientations
+  useEffect(() => {
+    let isMounted = true;
+    galleryImages.forEach((imgUrl) => {
+      if (orientations[imgUrl]) return; // Skip if already detected
+
+      const img = new Image();
+      img.src = imgUrl;
+
+      const handleLoad = () => {
+        if (!isMounted) return;
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        let orientation: 'landscape' | 'portrait' | 'square' = 'square';
+        if (w > h) {
+          orientation = 'landscape';
+        } else if (h > w) {
+          orientation = 'portrait';
+        }
+        setOrientations(prev => ({
+          ...prev,
+          [imgUrl]: orientation
+        }));
+      };
+
+      if (img.complete && img.naturalWidth) {
+        handleLoad();
+      } else {
+        img.onload = handleLoad;
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [project, galleryImages]);
+
+  // Project Navigation
+  const typeProjects = useMemo(() => {
+    if (!allProjects || allProjects.length === 0) return [];
+    const pType = project.type || 'interior';
+    return allProjects.filter(p => (p.type || 'interior') === pType);
+  }, [allProjects, project.type]);
+
+  const currentIndex = useMemo(() => {
+    return typeProjects.findIndex(p => p.id === project.id);
+  }, [typeProjects, project.id]);
+
+  const prevProject = currentIndex > 0 ? typeProjects[currentIndex - 1] : null;
+  const nextProject = currentIndex < typeProjects.length - 1 ? typeProjects[currentIndex + 1] : null;
+
+  const handlePrevProject = () => {
+    if (prevProject && onProjectChange) {
+      onProjectChange(prevProject);
+    }
+  };
+
+  const handleNextProject = () => {
+    if (nextProject && onProjectChange) {
+      onProjectChange(nextProject);
+    }
+  };
+
+  // Lightbox Image switching
+  const showNextImg = () => {
     if (selectedImgIndex !== null) {
       setSelectedImgIndex((selectedImgIndex + 1) % galleryImages.length);
+      setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
     }
   };
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const showPrevImg = () => {
     if (selectedImgIndex !== null) {
       setSelectedImgIndex((selectedImgIndex - 1 + galleryImages.length) % galleryImages.length);
+      setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
     }
   };
 
-  const titleWords = project.title.split(' ');
+  // Keyboard navigation & body scroll lock
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedImgIndex === null) return;
+      if (e.key === 'ArrowRight') {
+        showNextImg();
+      } else if (e.key === 'ArrowLeft') {
+        showPrevImg();
+      } else if (e.key === 'Escape') {
+        setSelectedImgIndex(null);
+        setZoomLevel(1);
+        setPanOffset({ x: 0, y: 0 });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden'; // Lock background scroll while detail page is open
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [selectedImgIndex, galleryImages]);
+
+  // Mouse wheel zoom
+  useEffect(() => {
+    const element = lightboxRef.current;
+    if (!element) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoomLevel(prev => {
+        const nextZoom = prev - e.deltaY * 0.005;
+        return Math.min(Math.max(nextZoom, 1), 4);
+      });
+    };
+
+    element.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+    };
+  }, [selectedImgIndex]);
+
+  // Double Click Zoom
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (zoomLevel > 1) {
+      setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
+    } else {
+      setZoomLevel(2.5);
+      setPanOffset({ x: 0, y: 0 });
+    }
+  };
+
+  // Drag Panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel <= 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoomLevel <= 1) return;
+    setPanOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Pinch Zoom on Mobile
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      setInitialTouchDistance(getTouchDistance(e.touches));
+    } else if (e.touches.length === 1 && zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - panOffset.x, y: e.touches[0].clientY - panOffset.y });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialTouchDistance !== null) {
+      const currentDist = getTouchDistance(e.touches);
+      const ratio = currentDist / initialTouchDistance;
+      setZoomLevel(prev => Math.min(Math.max(prev * ratio, 1), 4));
+      setInitialTouchDistance(currentDist);
+    } else if (e.touches.length === 1 && isDragging) {
+      setPanOffset({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setInitialTouchDistance(null);
+    setIsDragging(false);
+  };
 
   return (
     <motion.div 
-      initial={{ clipPath: 'circle(0% at 50% 50%)' }}
-      animate={{ clipPath: 'circle(150% at 50% 50%)' }}
-      exit={{ clipPath: 'circle(0% at 50% 50%)' }}
-      transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
       className="project-detail"
     >
-      {/* Lightbox Overlay */}
-      <AnimatePresence mode="wait">
-        {selectedImgIndex !== null && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="lightbox-overlay"
-            onClick={() => setSelectedImgIndex(null)}
-          >
-            <motion.button 
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.6 }}
-              transition={{ delay: 0.3 }}
-              className="lightbox-close" 
-              onClick={() => setSelectedImgIndex(null)}
-            >
-              ✕
-            </motion.button>
-            
-            <motion.button 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="nav-btn prev" 
-              onClick={handlePrev}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 18l-6-6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </motion.button>
-
-            <motion.div 
-              key={selectedImgIndex}
-              initial={{ scale: 0.9, opacity: 0, filter: 'blur(20px)' }}
-              animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-              exit={{ scale: 1.1, opacity: 0, filter: 'blur(20px)' }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="lightbox-content"
-            >
-              <img src={galleryImages[selectedImgIndex]} alt="Gallery view" />
-              <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="lightbox-info"
-              >
-                <span className="info-category">{project.category}</span>
-                <span className="info-counter">{selectedImgIndex + 1} of {galleryImages.length}</span>
-              </motion.div>
-            </motion.div>
-
-            <motion.button 
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="nav-btn next" 
-              onClick={handleNext}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="detail-sidebar">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="detail-close" 
-          onClick={onClose}
-        >
-          BACK TO PROJECTS
-        </motion.div>
-        <div className="detail-header">
-          <motion.span 
-            initial={{ opacity: 0, letterSpacing: '1em' }}
-            animate={{ opacity: 1, letterSpacing: '0.4em' }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="detail-category"
-          >
-            {project.category}
-          </motion.span>
-          
-          <motion.h2 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="detail-title"
-          >
-            {project.title}
-          </motion.h2>
-
-
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="detail-info-grid"
-          >
-            {project.location && (
-              <div className="info-item">
-                <span className="info-label">LOCATION</span>
-                <span className="info-value">{project.location}</span>
-              </div>
-            )}
-            {project.year && (
-              <div className="info-item">
-                <span className="info-label">YEAR</span>
-                <span className="info-value">{project.year}</span>
-              </div>
-            )}
-            {project.area && (
-              <div className="info-item">
-                <span className="info-label">AREA</span>
-                <span className="info-value">{project.area}</span>
-              </div>
-            )}
-          </motion.div>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
-            className="detail-desc"
-          >
-            {project.desc}
-          </motion.p>
-
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.6 }}
-          style={{ fontSize: '0.7rem', color: 'var(--secondary)', letterSpacing: '0.1em', marginTop: '6rem', paddingBottom: '4rem' }}
-        >
-          &copy; 2026 ANSH DESIGN STUDIO
-        </motion.div>
-      </div>
-
-      <div className="detail-main">
+      <div className="detail-gallery-container">
+        {/* Gallery Grid */}
         <div className="detail-gallery-grid">
           {galleryImages.map((img, i) => (
-            <motion.div 
+            <GalleryImage 
               key={i}
-              initial={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-              whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-              className="gallery-img-wrapper"
-              onClick={() => setSelectedImgIndex(i)}
-              style={{ cursor: 'zoom-in' }}
-            >
-              <img src={img} alt={`${project.title} view ${i + 1}`} />
-              <motion.div 
-                initial={{ x: '-100%' }}
-                whileInView={{ x: '100%' }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-                  zIndex: 2
-                }}
-              />
-            </motion.div>
+              src={img}
+              alt={`${project.title} view ${i + 1}`}
+              orientation={orientations[img] || 'orientation-square'}
+              onClick={() => {
+                setSelectedImgIndex(i);
+                setZoomLevel(1);
+                setPanOffset({ x: 0, y: 0 });
+              }}
+            />
           ))}
         </div>
+
+        {/* Floating Glass Info Button */}
+        <motion.button 
+          className={`floating-info-btn ${isInfoOpen ? 'active' : ''}`}
+          onClick={() => setIsInfoOpen(!isInfoOpen)}
+          whileHover={{ scale: 1.08 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Sparkles size={24} className="luxury-icon" />
+        </motion.button>
+
+        {/* Slide-out Side Information Panel */}
+        <AnimatePresence>
+          {isInfoOpen && (
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 200 }}
+              className="info-side-panel"
+            >
+              <div className="panel-header">
+                <button className="panel-close-btn" onClick={() => setIsInfoOpen(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="panel-content">
+                <span className="panel-category">{project.category}</span>
+                <h2 className="panel-title">{project.title}</h2>
+                
+                <div className="panel-metadata-grid">
+                  {project.location && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">LOCATION</span>
+                      <span className="metadata-value">{project.location}</span>
+                    </div>
+                  )}
+                  {project.year && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">YEAR</span>
+                      <span className="metadata-value">{project.year}</span>
+                    </div>
+                  )}
+                  {project.area && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">AREA</span>
+                      <span className="metadata-value">{project.area}</span>
+                    </div>
+                  )}
+                  {project.client && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">CLIENT</span>
+                      <span className="metadata-value">{project.client}</span>
+                    </div>
+                  )}
+                  {project.services && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">SERVICES</span>
+                      <span className="metadata-value">{project.services}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="panel-divider" />
+
+                <p className="panel-desc">{project.desc}</p>
+
+                <div className="panel-divider" />
+
+                {/* Project Navigation */}
+                <div className="panel-nav">
+                  <button 
+                    className="panel-nav-btn" 
+                    onClick={handlePrevProject} 
+                    disabled={!prevProject}
+                  >
+                    <ChevronLeft size={20} />
+                    <span>PREV PROJECT</span>
+                  </button>
+                  <button 
+                    className="panel-nav-btn" 
+                    onClick={handleNextProject} 
+                    disabled={!nextProject}
+                  >
+                    <span>NEXT PROJECT</span>
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+                
+                <button className="panel-exit-btn" onClick={onClose}>
+                  CLOSE GALLERY
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Lightbox Overlay */}
+        <AnimatePresence>
+          {selectedImgIndex !== null && (
+            <motion.div 
+              ref={lightboxRef}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="lightbox-overlay"
+              onClick={() => setSelectedImgIndex(null)}
+            >
+              <button className="lightbox-close" onClick={() => setSelectedImgIndex(null)}>✕</button>
+
+              <button className="nav-btn prev" onClick={(e) => { e.stopPropagation(); showPrevImg(); }}>
+                <ChevronLeft size={28} />
+              </button>
+
+              <div 
+                className="lightbox-content"
+                style={{ cursor: zoomLevel > 1 ? 'grab' : 'zoom-in' }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <img 
+                  ref={imgRef}
+                  src={galleryImages[selectedImgIndex]} 
+                  alt={`Lightbox view ${selectedImgIndex + 1}`}
+                  onDoubleClick={handleDoubleClick}
+                  style={{
+                    transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    pointerEvents: 'auto'
+                  }}
+                />
+              </div>
+
+              <button className="nav-btn next" onClick={(e) => { e.stopPropagation(); showNextImg(); }}>
+                <ChevronRight size={28} />
+              </button>
+
+              <div className="lightbox-info">
+                <span className="info-category">{project.category}</span>
+                <span className="info-counter">{selectedImgIndex + 1} of {galleryImages.length}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

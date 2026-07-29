@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProjectDetail from './ProjectDetail';
 import { useProjects } from '../hooks/useProjects';
@@ -9,12 +9,47 @@ const categories = ['ALL', 'RESIDENTIAL', 'COMMERCIAL', 'HOSPITALITY'];
 const InteriorGallery = ({ onProjectClick }: { onProjectClick: (project: any) => void }) => {
   const { projects } = useProjects();
   const [filter, setFilter] = useState('ALL');
+  const [orientations, setOrientations] = useState<Record<string, 'landscape' | 'portrait' | 'square'>>({});
 
   const interiorProjects = projects.filter(p => p.type === 'interior');
 
   const filteredItems = filter === 'ALL' 
     ? interiorProjects 
     : interiorProjects.filter(item => item.category === filter);
+
+  useEffect(() => {
+    let isMounted = true;
+    interiorProjects.forEach((project) => {
+      if (!project.image) return;
+      const img = new Image();
+      img.src = project.image;
+      
+      const handleLoad = () => {
+        if (!isMounted) return;
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        let orientation: 'landscape' | 'portrait' | 'square' = 'square';
+        if (width > height) {
+          orientation = 'landscape';
+        } else if (height > width) {
+          orientation = 'portrait';
+        }
+        setOrientations(prev => {
+          if (prev[project.id] === orientation) return prev;
+          return { ...prev, [project.id]: orientation };
+        });
+      };
+
+      if (img.complete && img.naturalWidth) {
+        handleLoad();
+      } else {
+        img.onload = handleLoad;
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [projects]);
 
   return (
     <section id="interior-design" className="portfolio">
@@ -64,11 +99,11 @@ const InteriorGallery = ({ onProjectClick }: { onProjectClick: (project: any) =>
                 delay: (idx % 3) * 0.1,
                 ease: [0.16, 1, 0.3, 1]
               }}
-              className={`portfolio-item ${item.size || 'item-medium'}`}
+              className={`portfolio-item ${orientations[item.id] || 'orientation-square'}`}
               onClick={() => onProjectClick(item)}
             >
               <div className="portfolio-item-inner">
-                <img src={item.image} alt={item.title} />
+                <img src={item.image} alt={item.title} loading="lazy" decoding="async" />
                 <div className="portfolio-overlay">
                   <div className="overlay-content">
                     <span className="project-category">{item.category}</span>
@@ -89,6 +124,5 @@ const InteriorGallery = ({ onProjectClick }: { onProjectClick: (project: any) =>
     </section>
   );
 };
-
 
 export default InteriorGallery;

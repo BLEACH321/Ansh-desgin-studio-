@@ -51,18 +51,32 @@
 
 .portfolio-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 projects per line */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-flow: dense;
   gap: 1.5rem;
-  grid-auto-rows: 400px; /* Matching the Architecture grid scale */
+  grid-auto-rows: 300px;
 }
 
 .portfolio-item {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  grid-column: span 1 !important;
-  grid-row: span 1 !important;
   border-radius: 20px;
+}
+
+.portfolio-item.orientation-landscape {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.portfolio-item.orientation-portrait {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.portfolio-item.orientation-square {
+  grid-column: span 1;
+  grid-row: span 1;
 }
 
 .portfolio-item-inner {
@@ -90,9 +104,9 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%); /* Sideways gradient */
+  background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%);
   display: flex;
-  align-items: center; /* Center vertically */
+  align-items: center;
   padding: 3rem;
   opacity: 0;
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -112,8 +126,8 @@
 }
 
 .overlay-content {
-  transform: translateX(-50px); /* Different: Slide from left instead of bottom */
-  filter: blur(10px); /* Different: Blur-in effect */
+  transform: translateX(-50px);
+  filter: blur(10px);
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
@@ -129,7 +143,7 @@
 .project-category {
   font-size: 0.75rem;
   letter-spacing: 0.4em;
-  color: #d2a64c; /* Premium Gold */
+  color: #d2a64c;
   text-transform: uppercase;
   font-weight: 800;
   text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(210, 166, 76, 0.3);
@@ -143,7 +157,7 @@
 
 .project-desc {
   font-size: 0.863rem;
-  color: #ffffff; /* Pure white */
+  color: #ffffff;
   line-height: 1.6;
   max-width: 90%;
 }
@@ -172,7 +186,17 @@
     gap: 1.462rem;
   }
   
-  .item-large, .item-tall, .item-medium, .item-small, .item-wide {
+  .portfolio-item.orientation-landscape {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  
+  .portfolio-item.orientation-portrait {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+  
+  .portfolio-item.orientation-square {
     grid-column: span 1;
     grid-row: span 1;
   }
@@ -209,6 +233,22 @@
   
   .portfolio-grid {
     grid-template-columns: 1fr;
+    grid-auto-rows: 250px;
+  }
+  
+  .portfolio-item.orientation-landscape {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  
+  .portfolio-item.orientation-portrait {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+  
+  .portfolio-item.orientation-square {
+    grid-column: span 1;
+    grid-row: span 1;
   }
   
   .portfolio-filters {
@@ -219,4 +259,3 @@
     font-size: 0.66rem;
   }
 }
-

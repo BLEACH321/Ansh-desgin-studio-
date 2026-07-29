@@ -29,9 +29,10 @@ export const useProjects = () => {
       if (res.data && Array.isArray(res.data)) {
         const cleanUrl = (url: string) => {
           if (!url) return url;
-          const uploadsIdx = url.indexOf('/uploads/');
+          if (url.startsWith('data:')) return url;
+          const uploadsIdx = url.indexOf('uploads/');
           if (uploadsIdx !== -1) {
-            return `${API_BASE_URL}${url.substring(uploadsIdx)}`;
+            return `${API_BASE_URL}/${url.substring(uploadsIdx)}`;
           }
           return url;
         };
@@ -63,14 +64,14 @@ export const useProjects = () => {
   };
 
   const updateProject = async (id: string, updated: Partial<Project>) => {
-    await axios.put(`${API_BASE_URL}/projects.php?id=${id}`, updated);
+    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=update`, updated);
     await loadProjects();
   };
 
   const deleteProject = async (id: string) => {
     const projectToDelete = projects.find(p => p.id === id);
     if (projectToDelete) setDeletedProjects(prev => [projectToDelete, ...prev]);
-    await axios.delete(`${API_BASE_URL}/projects.php?id=${id}`);
+    await axios.post(`${API_BASE_URL}/projects.php?id=${id}&action=delete`);
     await loadProjects();
   };
 

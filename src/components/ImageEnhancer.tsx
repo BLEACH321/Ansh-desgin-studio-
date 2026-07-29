@@ -12,15 +12,15 @@ interface ImageEnhancerProps {
 type ResolutionPreset = 'standard' | 'hd' | 'fhd' | 'original';
 
 export const ImageEnhancer: React.FC<ImageEnhancerProps> = ({ imageSrc, onSave, onClose }) => {
-  const [resolution, setResolution] = useState<ResolutionPreset>('fhd');
-  const [preset, setPreset] = useState<string>('auto');
+  const [resolution, setResolution] = useState<ResolutionPreset>('original');
+  const [preset, setPreset] = useState<string>('none');
   
   // Sliders
-  const [sharpenStrength, setSharpenStrength] = useState<number>(0.2);
-  const [clarity, setClarity] = useState<number>(10);
-  const [brightness, setBrightness] = useState<number>(5);
-  const [contrast, setContrast] = useState<number>(8);
-  const [saturation, setSaturation] = useState<number>(12);
+  const [sharpenStrength, setSharpenStrength] = useState<number>(0);
+  const [clarity, setClarity] = useState<number>(0);
+  const [brightness, setBrightness] = useState<number>(0);
+  const [contrast, setContrast] = useState<number>(0);
+  const [saturation, setSaturation] = useState<number>(0);
   const [denoise, setDenoise] = useState<number>(0);
 
   // Split-slider UI State
@@ -208,7 +208,7 @@ export const ImageEnhancer: React.FC<ImageEnhancerProps> = ({ imageSrc, onSave, 
     }
 
     // Update Preview
-    const quality = resolution === 'original' ? 0.95 : 0.88;
+    const quality = 0.98;
     const dataUrl = canvas.toDataURL('image/jpeg', quality);
     setEnhancedPreviewUrl(dataUrl);
     setIsProcessing(false);

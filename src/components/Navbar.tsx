@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = ({ onAdminClick, hideNav }: { onAdminClick: () => void, hideNav?: boolean }) => {
+const Navbar = ({ onAdminClick, hideNav, onLinkClick }: { onAdminClick: () => void, hideNav?: boolean, onLinkClick?: () => void }) => {
   const [scrolled, setScrolled] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -20,6 +20,7 @@ const Navbar = ({ onAdminClick, hideNav }: { onAdminClick: () => void, hideNav?:
 
   const handleNavClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
+    onLinkClick?.();
     const element = document.getElementById(id);
     if (element) {
       const offset = 80; // Navbar height

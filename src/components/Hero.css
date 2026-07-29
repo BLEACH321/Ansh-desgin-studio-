@@ -737,15 +737,36 @@
 }
 
 @media (max-width: 768px) {
-  .hero-fullscreen-bg-wrapper {
-    left: 16px;
-    right: 16px;
-    top: 90px;
-    bottom: 90px;
-    border-radius: 16px;
+  .hero-fullscreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px;
+    height: 100vh;
+    box-sizing: border-box;
   }
+
+  .hero-fullscreen-bg-wrapper {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+    aspect-ratio: 4 / 3; /* Premium landscape ratio to display wide photos nicely on mobile screens */
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  }
+
   .hero-navigation-bar {
-    bottom: 1.5rem;
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 }
 

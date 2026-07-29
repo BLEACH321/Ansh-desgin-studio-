@@ -31,16 +31,44 @@ const Hero = ({ onProjectClick }: { onProjectClick?: (project: any) => void }) =
     return <section id="home" className="hero-fullscreen" style={{ height: '100vh', background: '#000' }} />;
   }
 
+  // Parallax sliding transitions variants
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? "100%" : dir < 0 ? "-100%" : 0,
+      scale: 1.12,
+      opacity: 0,
+      zIndex: 1
+    }),
+    center: {
+      x: 0,
+      scale: 1,
+      opacity: 1,
+      zIndex: 2
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? "-20%" : dir < 0 ? "20%" : 0,
+      scale: 0.96,
+      opacity: 0,
+      zIndex: 0
+    })
+  };
+
   return (
     <section id="home" className="hero-fullscreen">
-      {/* Fullscreen Ken Burns Background Image */}
-      <AnimatePresence initial={false} mode="wait">
+      {/* Fullscreen Parallax Sliding Background Image */}
+      <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}
-          initial={{ scale: 1.08, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.8, ease: "easeInOut" }}
+          custom={direction}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 180, damping: 24, mass: 0.8 },
+            opacity: { duration: 0.6, ease: "easeOut" },
+            scale: { duration: 1.2, ease: [0.16, 1, 0.3, 1] }
+          }}
           className="hero-fullscreen-bg"
           style={{ backgroundImage: `url(${slides[currentIndex].image})` }}
         />

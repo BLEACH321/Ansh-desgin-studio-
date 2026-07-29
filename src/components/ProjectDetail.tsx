@@ -25,17 +25,20 @@ interface ProjectDetailProps {
   allProjects?: Project[];
 }
 
-const GalleryImage = ({ src, alt, orientation, onClick }: { src: string, alt: string, orientation: string, onClick: () => void }) => {
+const GalleryImage = ({ src, alt, ratio, onClick }: { src: string, alt: string, ratio?: number, onClick: () => void }) => {
   const [loaded, setLoaded] = useState(false);
   
+  // Calculate padding bottom based on aspect ratio to prevent layout shift
+  const paddingBottom = ratio ? `${(1 / ratio) * 100}%` : '75%';
+
   return (
     <div 
-      className={`gallery-img-wrapper ${orientation}`}
+      className="gallery-img-wrapper"
       onClick={onClick}
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', width: '100%', overflow: 'hidden' }}
     >
       {!loaded && (
-        <div className="blur-placeholder" />
+        <div className="blur-placeholder" style={{ paddingBottom, width: '100%', height: 0 }} />
       )}
       <img 
         src={src} 
@@ -46,7 +49,10 @@ const GalleryImage = ({ src, alt, orientation, onClick }: { src: string, alt: st
         style={{
           opacity: loaded ? 1 : 0,
           filter: loaded ? 'none' : 'blur(20px)',
-          transition: 'opacity 0.6s ease, filter 0.6s ease'
+          transition: 'opacity 0.6s ease, filter 0.6s ease',
+          width: '100%',
+          height: 'auto',
+          display: 'block'
         }}
       />
     </div>
@@ -56,7 +62,8 @@ const GalleryImage = ({ src, alt, orientation, onClick }: { src: string, alt: st
 const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProjectChange, allProjects = [] }) => {
   const [selectedImgIndex, setSelectedImgIndex] = useState<number | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [orientations, setOrientations] = useState<Record<string, 'landscape' | 'portrait' | 'square'>>({});
+  const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
+  const [numCols, setNumCols] = useState(4);
 
   // Lightbox Zoom & Pan State
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -74,11 +81,30 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
       : [project.image];
   }, [project]);
 
-  // Determine Image Orientations
+  // Handle Columns Count Responsively
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w > 1200) {
+        setNumCols(4); // Desktop
+      } else if (w > 768) {
+        setNumCols(3); // Laptop
+      } else if (w > 480) {
+        setNumCols(2); // Tablet
+      } else {
+        setNumCols(1); // Mobile
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Determine Image Aspect Ratios
   useEffect(() => {
     let isMounted = true;
     galleryImages.forEach((imgUrl) => {
-      if (orientations[imgUrl]) return; // Skip if already detected
+      if (aspectRatios[imgUrl]) return; // Skip if already detected
 
       const img = new Image();
       img.src = imgUrl;
@@ -87,15 +113,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
         if (!isMounted) return;
         const w = img.naturalWidth;
         const h = img.naturalHeight;
-        let orientation: 'landscape' | 'portrait' | 'square' = 'square';
-        if (w > h) {
-          orientation = 'landscape';
-        } else if (h > w) {
-          orientation = 'portrait';
-        }
-        setOrientations(prev => ({
+        setAspectRatios(prev => ({
           ...prev,
-          [imgUrl]: orientation
+          [imgUrl]: w / h
         }));
       };
 
@@ -109,6 +129,15 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
       isMounted = false;
     };
   }, [project, galleryImages]);
+
+  // Distribute images into columns horizontally to keep order sequential left-to-right
+  const columns = useMemo(() => {
+    const cols: string[][] = Array.from({ length: numCols }, () => []);
+    galleryImages.forEach((img, idx) => {
+      cols[idx % numCols].push(img);
+    });
+    return cols;
+  }, [galleryImages, numCols]);
 
   // Project Navigation
   const typeProjects = useMemo(() => {
@@ -127,12 +156,14 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
   const handlePrevProject = () => {
     if (prevProject && onProjectChange) {
       onProjectChange(prevProject);
+      setIsInfoOpen(false); // Close panel on switch
     }
   };
 
   const handleNextProject = () => {
     if (nextProject && onProjectChange) {
       onProjectChange(nextProject);
+      setIsInfoOpen(false); // Close panel on switch
     }
   };
 
@@ -270,20 +301,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
       className="project-detail"
     >
       <div className="detail-gallery-container">
-        {/* Gallery Grid */}
-        <div className="detail-gallery-grid">
-          {galleryImages.map((img, i) => (
-            <GalleryImage 
-              key={i}
-              src={img}
-              alt={`${project.title} view ${i + 1}`}
-              orientation={orientations[img] ? `orientation-${orientations[img]}` : 'orientation-square'}
-              onClick={() => {
-                setSelectedImgIndex(i);
-                setZoomLevel(1);
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            />
+        {/* True Masonry Columns Grid */}
+        <div className="detail-gallery-grid-masonry">
+          {columns.map((colImages, colIdx) => (
+            <div key={colIdx} className="detail-gallery-col">
+              {colImages.map((img) => (
+                <GalleryImage 
+                  key={img}
+                  src={img}
+                  alt={`${project.title} view`}
+                  ratio={aspectRatios[img]}
+                  onClick={() => {
+                    const originalIdx = galleryImages.indexOf(img);
+                    setSelectedImgIndex(originalIdx);
+                    setZoomLevel(1);
+                    setPanOffset({ x: 0, y: 0 });
+                  }}
+                />
+              ))}
+            </div>
           ))}
         </div>
 

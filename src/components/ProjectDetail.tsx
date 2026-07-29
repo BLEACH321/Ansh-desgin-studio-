@@ -294,10 +294,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onClose, onProje
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
+      initial={{ clipPath: 'circle(0% at 50% 50%)', opacity: 0.8 }}
+      animate={{ clipPath: 'circle(150% at 50% 50%)', opacity: 1 }}
+      exit={{ clipPath: 'circle(0% at 50% 50%)', opacity: 0.8 }}
+      transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
       className="project-detail"
     >
       <div className="detail-gallery-container">
